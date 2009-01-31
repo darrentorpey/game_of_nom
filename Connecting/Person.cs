@@ -45,11 +45,24 @@ namespace Connecting
         {
             if (_CollidingObject != null)
             {
+                GameObjectManager manager = GameObjectManager.Instance;
                 if (_CollidingObject is PersonFlock)
                 {
-                    GameObjectManager.Instance._Objects.Remove(this);
+                    manager._Objects.Remove(this);
                     ((PersonFlock)_CollidingObject).AddPerson(this);
                 }
+                else if (_CollidingObject is Person)
+                {
+                    manager._Objects.Remove(this);
+                    manager._Objects.Remove(_CollidingObject);
+                    PersonFlock flock = new PersonFlock();
+                    flock.AddPerson(this);
+                    flock.AddPerson((Person)_CollidingObject);
+                    flock.Location = this.Location;
+                    manager._Objects.Add(flock);
+                }
+
+                _CollidingObject = null;
             }
 
             _bHeld = false;
