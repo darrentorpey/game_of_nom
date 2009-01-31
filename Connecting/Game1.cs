@@ -23,6 +23,7 @@ namespace Connecting
 
         SpriteFont font;
 
+        PersonFlock _Flock = new PersonFlock();
         Person[] _Persons;
 
         public Game1()
@@ -41,7 +42,6 @@ namespace Connecting
         /// </summary>
         protected override void Initialize()
         {
-
             base.Initialize();
         }
 
@@ -57,6 +57,16 @@ namespace Connecting
             Person.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
+            Random rand = new Random();
+            // Add lots of people around randomly
+            for (int i = 0; i < 20; ++i)
+            {
+                _Flock.AddPerson(new Person(
+                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height))
+                ));
+            }
+
+            _Flock.TargetLocation = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             // Init people here so that we know the content (textures, etc.) are loaded
             _Persons = new Person[] {
                 new Person(new Vector2(100, 100)), 
@@ -85,10 +95,10 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
+            _Flock.Update(gameTime);
             processMouseEvents();
 
             // TODO: Add your update logic here
-
             base.Update(gameTime);
         }
 
@@ -153,7 +163,8 @@ namespace Connecting
             GraphicsDevice.Clear(Color.White);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "Hello World!", Vector2.Zero, Color.Black);
+            spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
+            _Flock.Draw(spriteBatch, gameTime);
             for (int i = 0; i < _Persons.Length; ++i)
                 _Persons[i].Draw(spriteBatch, gameTime);
 

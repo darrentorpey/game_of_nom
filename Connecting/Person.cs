@@ -10,12 +10,16 @@ namespace Connecting
 {
     public class Person
     {
+        const float c_fSpeed = 3.0f;
+
         public static Texture2D s_BallRed;
         public static Texture2D s_BallGreen;
 
+        public Vector2 Location;
+        public Vector2 FlockLocation;
+
         public Texture2D _TheTexture;
 
-        public Vector2 Location;
 
         public Person(Vector2 aStartLocation)
         {
@@ -25,7 +29,7 @@ namespace Connecting
 
         public void Update(GameTime aTime)
         {
-
+            
         }
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
