@@ -14,9 +14,14 @@ namespace Connecting
 
         Vector2 _Location;
 
-        public Person()
+        public Vector2 Location
         {
-            _Location = Vector2.Zero;
+            get { return _Location; }
+        }
+
+        public Person(Vector2 aStartLocation)
+        {
+            _Location = aStartLocation;
         }
 
         public void Update(GameTime aTime)
