@@ -28,12 +28,21 @@ namespace Connecting
         private GameObject _CollidingObject = null;
         private Vector2 _Velocity;
 
+        private Vector2[] _Forces = new Vector2[5];
+        private Color[] _ForceColors = new Color[] {
+            Color.Red, Color.Black, Color.Green, Color.Blue, Color.Pink
+        };
+
         public PersonFlock ParentFlock { get; set; }
         public override float Radius { get { return 13.0f; } }
+        public Vector2 Velocity { get { return _Velocity; } }
 
         public Person(Vector2 aStartLocation)
         {
             Location = aStartLocation;
+
+            Random rand = new Random();
+            _Velocity = new Vector2((float)rand.NextDouble(), (float)rand.NextDouble());
         }
 
         public override void Hold()
@@ -84,8 +93,12 @@ namespace Connecting
                     MyMood = Mood.Happy;
                 else if (Instability < 50.0f)
                     MyMood = Mood.Sad;
-                else
+                else if (Instability < 100.0f)
                     MyMood = Mood.Angry;
+                else
+                {
+                    // EXPLODE
+                }
             }
             else
             {
@@ -119,14 +132,18 @@ namespace Connecting
             Vector2 forces = Vector2.Zero;
             if (ParentFlock != null)
             {
+                _Forces[4] = ParentFlock.GetExternalForces(this);
+
                 // Always move toward CoM.  Pull harder if farther away.
-                forces += GetForceToward(ParentFlock.CurrentCoM, .51f);
+                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .25f, Radius * ParentFlock.People.Count);
                 
                 // Always move toward Target location
-                forces += GetForceToward(ParentFlock.Location, .51f);
+                _Forces[1] = GetForceToward(ParentFlock.Location, 2f, 2.5f);
+                //forces += GetForceToward(ParentFlock.Location, 3.0f, Radius * ParentFlock.People.Count);
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;
+                Vector2 matchingForce = Vector2.Zero;
                 for (int i = 0; i < ParentFlock.People.Count; ++i)
                 {
                     if (ParentFlock.People[i] == this)
@@ -140,23 +157,34 @@ namespace Connecting
                         avoidanceForce += force;
                         Instability += 1.0f;
                     }
+
+                    // Match velocity with other boids
+                    matchingForce += ParentFlock.People[i].Velocity;
                 }
-                forces += avoidanceForce;
+                _Forces[2] = avoidanceForce;
+                _Forces[3] = matchingForce / (ParentFlock.People.Count - 1) * .5f;
+
+                for (int i = 0; i < 5; ++i)
+                    forces += _Forces[i];
             }
 
             // Always involve friction
-            forces += (-_Velocity) * .5f;
+            //forces += (-_Velocity) * .35f;
 
             // Assume 1.0 mass, force is acceleration
             _Velocity += forces;
         }
 
-        private Vector2 GetForceToward(Vector2 aPoint, float afDampening)
+        private Vector2 GetForceToward(Vector2 aPoint, float afPull, float afFalloff)
         {
-            float fcomDist = (Vector2.Distance(Location, ParentFlock.CurrentCoM) * afDampening);
-            Vector2 force = (aPoint - Location);
+            float fcomDist = Vector2.Distance(Location, aPoint);
+            if (fcomDist == 0.0f)
+                return Vector2.Zero;
 
-            return force * afDampening;
+            Vector2 force = (Location - aPoint);
+            force.Normalize();
+
+            return force * (afPull - fcomDist / afFalloff);
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
@@ -166,6 +194,9 @@ namespace Connecting
 
             if (_bHeld)
                 aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
+
+            //for (int i = 0; i < 5; ++i)
+            //    DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
         }
 
         public static void LoadContent(ContentManager aManager)

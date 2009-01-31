@@ -24,10 +24,11 @@ namespace Connecting
             Vector2 connection = aFrom - aTo;
             Vector2 baseVector = new Vector2(1, 0);
 
-            float alpha = (float)Math.Atan2(aFrom.Y - aTo.Y, aFrom.X - aTo.X);
+            float angle = (float)Math.Atan2((double)(aTo.Y - aFrom.Y),
+                    (double)(aTo.X - aFrom.X));
 
-            aBatch.Draw(_Pixel, new Rectangle((int)aFrom.X, (int)aTo.Y, distance, 1),
-                null, aColor, alpha, new Vector2(0, 0), SpriteEffects.None, 0);
+            aBatch.Draw(_Pixel, aFrom, null, aColor, angle, Vector2.Zero, new Vector2(distance, 1),
+                    SpriteEffects.None, 0);
         }
 
         public static void DrawPoint(SpriteBatch aBatch, Vector2 aPoint, int aiSize, Color aColor)
