@@ -33,8 +33,8 @@ namespace Connecting
             //throw new NotImplementedException("Can't hold food");
         }
 
-        public static int s_Capacity = 7;
-        public int _AmountLeft = 7;
+        public static int s_Capacity = 6;
+        public int _AmountLeft = s_Capacity;
         public int AmountLeft { get { return _AmountLeft; } }
 
         public FoodSource() {
