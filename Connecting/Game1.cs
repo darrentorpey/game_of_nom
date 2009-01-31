@@ -23,7 +23,7 @@ namespace Connecting
 
         SpriteFont font;
 
-        Person[] _Persons;
+        PersonFlock _Flock = new PersonFlock();
 
         public Game1()
         {
@@ -41,9 +41,14 @@ namespace Connecting
         /// </summary>
         protected override void Initialize()
         {
-            _Persons = new Person[] {
-                new Person()
-            };
+            Random rand = new Random();
+            // Add lots of people around randomly
+            for(int i = 0; i < 20; ++i)
+            {
+                _Flock.AddPerson(new Person(
+                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height))
+                ));
+            }
 
             base.Initialize();
         }
@@ -82,7 +87,10 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            // TODO: Add your update logic here
+            MouseState state = Mouse.GetState();
+
+            _Flock.TargetLocation = new Vector2(state.X, state.Y);
+            _Flock.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -96,9 +104,8 @@ namespace Connecting
             GraphicsDevice.Clear(Color.White);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "Hello World!", Vector2.Zero, Color.Black);
-            for (int i = 0; i < _Persons.Length; ++i)
-                _Persons[i].Draw(spriteBatch, gameTime);
+            spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
+            _Flock.Draw(spriteBatch, gameTime);
 
             spriteBatch.End();
 

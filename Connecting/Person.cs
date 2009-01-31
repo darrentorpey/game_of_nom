@@ -12,16 +12,11 @@ namespace Connecting
     {
         static Texture2D s_Texture;
 
-        Vector2 _Location;
-
-        public Vector2 Location
-        {
-            get { return _Location; }
-        }
+        public Vector2 Location;
 
         public Person(Vector2 aStartLocation)
         {
-            _Location = aStartLocation;
+            Location = aStartLocation;
         }
 
         public void Update(GameTime aTime)
@@ -31,7 +26,7 @@ namespace Connecting
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            aBatch.Draw(s_Texture, _Location, Color.White);
+            aBatch.Draw(s_Texture, Location, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
