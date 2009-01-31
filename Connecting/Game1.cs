@@ -23,6 +23,8 @@ namespace Connecting
 
         SpriteFont font;
 
+        Person[] _Persons;
+
         public Game1()
         {
             this.IsMouseVisible = true;
@@ -39,7 +41,9 @@ namespace Connecting
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            _Persons = new Person[] {
+                new Person()
+            };
 
             base.Initialize();
         }
@@ -53,6 +57,7 @@ namespace Connecting
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            Person.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");            
         }
 
@@ -92,6 +97,9 @@ namespace Connecting
 
             spriteBatch.Begin();
             spriteBatch.DrawString(font, "Hello World!", Vector2.Zero, Color.Black);
+            for (int i = 0; i < _Persons.Length; ++i)
+                _Persons[i].Draw(spriteBatch, gameTime);
+
             spriteBatch.End();
 
             base.Draw(gameTime);
