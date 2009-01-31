@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Connecting", "Connecting\Connecting.csproj", "{AA22BCA3-CC6C-4725-9018-B82A1660F228}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA22BCA3-CC6C-4725-9018-B82A1660F228}.Debug|x86.ActiveCfg = Debug|x86
+		{AA22BCA3-CC6C-4725-9018-B82A1660F228}.Debug|x86.Build.0 = Debug|x86
+		{AA22BCA3-CC6C-4725-9018-B82A1660F228}.Release|x86.ActiveCfg = Release|x86
+		{AA22BCA3-CC6C-4725-9018-B82A1660F228}.Release|x86.Build.0 = Release|x86
+		{0F951DB7-C4F1-410C-88AA-36533DA6ECEB}.Debug|x86.ActiveCfg = Debug|x86
+		{0F951DB7-C4F1-410C-88AA-36533DA6ECEB}.Release|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
