@@ -11,8 +11,10 @@ namespace Connecting
     public class FoodSource : GameObject
     {
 
-        const float c_decayMultiplier = 5.0f;
-        int _TicksEaten = 0;
+        const int c_decayTime = 1500;
+
+        int _iEatDelay = 0;
+
         public bool Dead = false;
 
         static Texture2D[][] s_FruitTextureSets;
@@ -26,8 +28,6 @@ namespace Connecting
         }
 
         public Fruit FruitType { get; set; }
-
-        private static Texture2D[] s_FoodTextures;
 
         private bool _BeingEaten = false;
 
@@ -67,25 +67,27 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
-            //if (this is FoodSource) {
-            //    Console.WriteLine("hello " + ((FoodSource)this)._BeingEaten);
-            //}
-
-            _TicksEaten++;
-
-            if (BeingEaten && _TicksEaten%(10*c_decayMultiplier) == 0)
+            if (BeingEaten)
             {
-                if (_AmountLeft == 1)
+                if (_iEatDelay <= 0)
                 {
-                    Dead = true;
-                    BeingEaten = false; // This location may be a bad idea
-                    // Remove self from the game object manager
-                    GameObjectManager.Instance._Objects.Remove(this);
+                    _iEatDelay = c_decayTime;
+                    if (_AmountLeft == 1)
+                    {
+                        Dead = true;
+                        BeingEaten = false; // This location may be a bad idea
+                        SoundState.Instance.PlayNomSound(this, aTime);
+                        // Remove self from the game object manager
+                        GameObjectManager.Instance._Objects.Remove(this);
+                    }
+                    else
+                    {
+                        SoundState.Instance.PlayNomSound(this, aTime);
+                        _AmountLeft--;
+                    }
                 }
                 else
-                {
-                    _AmountLeft--;
-                }
+                    _iEatDelay -= aTime.ElapsedGameTime.Milliseconds;
             }
         }
 

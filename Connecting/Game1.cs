@@ -59,6 +59,7 @@ namespace Connecting
             Person.LoadContent(Content);
             FoodSource.LoadContent(Content);
             DrawUtils.LoadContent(Content);
+            SoundState.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
             spawnStartingObjects();

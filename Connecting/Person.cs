@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Connecting
 {
@@ -196,7 +197,10 @@ namespace Connecting
                             if (_fSensitivity < 20.0f)
                                 MyMood = Mood.Happy;
                             else if (_fSensitivity > 120.0f)
+                            {
+                                SoundState.Instance.PlayAngrySound(this, aTime);
                                 MyMood = Mood.Angry;
+                            }
                             break;
                         case Mood.Angry:
                             if (_fSensitivity < 40.0f)
@@ -206,6 +210,7 @@ namespace Connecting
                                 // EXPLODE!
                                 ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 600.0f, 3.0f, 120));
                                 ParentFlock.RemovePerson(this);
+                                SoundState.Instance.PlayExplosionSound(aTime);
 
                                 MyMood = Mood.Sad;
                                 _eMyState = State.Alone;
@@ -437,7 +442,7 @@ namespace Connecting
             s_MoodTextures = new Texture2D[(int)Mood.Count];
             for (int i = 0; i < (int)Mood.Count; ++i)
                 s_MoodTextures[i] = aManager.Load<Texture2D>("people_" + ((Mood)i).ToString() + "_1");
-            
+
             s_HeldTexture = aManager.Load<Texture2D>("selection_halo_1");
         }
     }
