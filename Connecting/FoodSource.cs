@@ -15,6 +15,18 @@ namespace Connecting
         int _TicksEaten = 0;
         public bool Dead = false;
 
+        static Texture2D[][] s_FruitTextureSets;
+
+        public enum Fruit
+        {
+            Grapes = 0,
+            Orange = 1,
+
+            Count = 2
+        }
+
+        public Fruit FruitType { get; set; }
+
         private static Texture2D[] s_FoodTextures;
 
         private bool _BeingEaten = false;
@@ -47,6 +59,12 @@ namespace Connecting
             Location = aStartLocation;
         }
 
+        public FoodSource(Vector2 aStartLocation, Fruit fruit)
+        {
+            Location = aStartLocation;
+            FruitType = fruit;
+        }
+
         public override void Update(GameTime aTime)
         {
             //if (this is FoodSource) {
@@ -60,6 +78,9 @@ namespace Connecting
                 if (_AmountLeft == 1)
                 {
                     Dead = true;
+                    BeingEaten = false; // This location may be a bad idea
+                    // Remove self from the game object manager
+                    GameObjectManager.Instance._Objects.Remove(this);
                 }
                 else
                 {
@@ -70,16 +91,23 @@ namespace Connecting
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            Vector2 draw_loc = new Vector2(Location.X - (float)(s_FoodTextures[0].Width / 2), Location.Y - (float)(s_FoodTextures[0].Height / 2));
-            aBatch.Draw(s_FoodTextures[_AmountLeft - 1], draw_loc, Color.White);
+            Vector2 draw_loc = new Vector2(Location.X - (float)(s_FruitTextureSets[(int)FruitType][0].Width / 2), Location.Y - (float)(s_FruitTextureSets[(int)FruitType][0].Height / 2));
+            aBatch.Draw(s_FruitTextureSets[(int)FruitType][_AmountLeft - 1], draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_FoodTextures = new Texture2D[s_Capacity];
+            s_FruitTextureSets = new Texture2D[(int)Fruit.Count][];
+            for (int i = 0; i < s_FruitTextureSets.Count(); ++i)
+            {
+                s_FruitTextureSets[i] = new Texture2D[s_Capacity];
+            }
+
+            s_FruitTextureSets[(int)Fruit.Grapes] = new Texture2D[s_Capacity];
             for (int i = 0; i < s_Capacity; ++i)
             {
-                s_FoodTextures[i] = aManager.Load<Texture2D>("food/food_grapes_" + i);
+                s_FruitTextureSets[(int)Fruit.Grapes][i] = aManager.Load<Texture2D>("food/food_grapes_" + i);
+                s_FruitTextureSets[(int)Fruit.Orange][i] = aManager.Load<Texture2D>("food/food_orange_" + i);
             }
         }
 

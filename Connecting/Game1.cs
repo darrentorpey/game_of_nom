@@ -61,27 +61,47 @@ namespace Connecting
             DrawUtils.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
+            spawnStartingObjects();
+        }
+
+        private void spawnStartingObjects()
+        {
             // Add lots of people around randomly
             _Flock = new PersonFlock();
-            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, Window.ClientBounds.Width), 
+            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, Window.ClientBounds.Width),
                 RandomInstance.Instance.Next(0, Window.ClientBounds.Height));
             Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
-            for (int i = 0; i < 20; ++i)
+            for (int i = 0; i < 10; ++i)
             {
                 Person newPerson = new Person(_Flock.Location, bounds);
                 _Flock.AddPerson(newPerson);
             }
 
-            FoodSource theFood = new FoodSource(new Vector2(RandomInstance.Instance.Next(0, Window.ClientBounds.Width), 
-                RandomInstance.Instance.Next(0, Window.ClientBounds.Height)));
-
             // Init people here so that we know the content (textures, etc.) are loaded
             GameObjectManager.Instance._Objects = new List<GameObject> {
-                new Person(new Vector2(100, 100), bounds), 
-                new Person(new Vector2(200, 200), bounds),
-                _Flock,
-                theFood
+                _Flock
             };
+
+            for (int i = 0; i < 5; ++i) {
+                GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(100), bounds));
+            }
+
+            for (int i = 0; i < 5; ++i)
+            {
+                GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(100), FoodSource.Fruit.Grapes));
+            }
+
+            for (int i = 0; i < 5; ++i)
+            {
+                GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(100), FoodSource.Fruit.Orange));
+            }
+        }
+
+        private Vector2 getRandomLocation(int borderPadding)
+        {
+            return new Vector2(
+                RandomInstance.Instance.Next(0, Window.ClientBounds.Width - borderPadding),
+                RandomInstance.Instance.Next(0, Window.ClientBounds.Height - borderPadding));
         }
 
         /// <summary>

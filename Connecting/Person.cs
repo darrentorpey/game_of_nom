@@ -34,15 +34,15 @@ namespace Connecting
         {
             Alone,
             Flocking,
-            Held
+            Held,
+            Eating
         }
 
         public enum AloneState
         {
             StandingStill,
             Looking,
-            Wandering,
-            Eating
+            Wandering
         }
 
         public enum LookDirection
@@ -122,7 +122,7 @@ namespace Connecting
             }
 
             // I thought this was needed, but so far it isn't
-            //alterMyMood(true);
+            MyMood = getMood();
 
             if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
             {
@@ -134,6 +134,7 @@ namespace Connecting
             {
                 _NearbyFoodSources.First().BeingEaten = true;
                 EatingObject = _NearbyFoodSources.First();
+                _eMyState = State.Eating;
             }
         }
 
@@ -142,14 +143,23 @@ namespace Connecting
             if (ParentFlock != null)
                 _eMyState = State.Flocking;
 
+            if (_eMyState == State.Eating && EatingObject.Dead)
+            {
+                Console.WriteLine("done");
+                EatingObject = null;
+                _eMyState = State.Alone;
+                _eMyAloneState = AloneState.StandingStill;
+            }
             switch(_eMyState)
             {
+                case State.Eating:
+                    MyMood = getMood();
+                    break;
                 case State.Flocking:
                     MyMood = Mood.Happy;
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
                     break;
-
                 case State.Alone:
                     AccumulateForces();
                     if (_iNextThink <= 0)
@@ -166,10 +176,13 @@ namespace Connecting
                     else
                         _iNextThink -= aTime.ElapsedGameTime.Milliseconds;
 
+                    MyHoverMood = getMood();
+
                     switch (_eMyAloneState)
                     {
                         case AloneState.StandingStill:
                             _WalkVelocity = Vector2.Zero;
+                            MyMood = getMood();
                             break;
                         case AloneState.Looking:
                             if (_iNextLook <= 0)
@@ -180,6 +193,7 @@ namespace Connecting
                             else
                                 _iNextLook -= aTime.ElapsedGameTime.Milliseconds;
                             _WalkVelocity = Vector2.Zero;
+                            MyMood = getMood();
                             break;
                         case AloneState.Wandering:
                             if (_WalkVelocity == Vector2.Zero)
@@ -205,16 +219,17 @@ namespace Connecting
 
                             if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
                                 _WalkVelocity.Y = -_WalkVelocity.Y;
+                            MyMood = getMood();
                             break;
                     }
                     break;
                 case State.Held:
-                    alterMyMood(false);
+                    MyHoverMood = getMood();
                     break;
             }
         }
 
-        private void alterMyMood(bool realMood)
+        private Mood getMood()
         {
             _NearbyFoodSources.Clear();
 
@@ -244,37 +259,25 @@ namespace Connecting
 
             if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
                 // If we're colliding with a person, we're happy (we're very social!)
-                if (realMood){
-                    MyMood = Mood.Happy;
-                }
-                else
-                {
-                    MyHoverMood = Mood.Happy;
-                }
+                return Mood.Happy;
             }
             else if (_NearbyFoodSources.Count != 0)
             {
-                // If we're near available food, we're happy
-                if (realMood)
+                if (EatingObject != null)
                 {
-                    MyMood = Mood.Happy;
+                    // Yay we're eating! nom nom nom ^_^
+                    return Mood.Eating;
                 }
                 else
                 {
-                    MyHoverMood = Mood.Happy;
+                    // If we're near available food, we're happy
+                    return Mood.Excited;
                 }
             }
             else
             {
                 // Otherwise, that makes us a SAD PANDA
-                if (realMood)
-                {
-                    MyMood = Mood.Sad;
-                }
-                else
-                {
-                    MyHoverMood = Mood.Sad;
-                }
+                return Mood.Sad;
             }
         }
 
@@ -355,16 +358,23 @@ namespace Connecting
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_MoodTextures[0].Width / 2), Location.Y - (float)(s_MoodTextures[0].Height / 2));
             Texture2D mood_texture;
-            if (MyHoverMood != null)
+
+            if (_eMyState == State.Held)
+            {
                 mood_texture = s_MoodTextures[(int)MyHoverMood];
+            }
             else
+            {
                 mood_texture = s_MoodTextures[(int)MyMood];
-           
-            aBatch.Draw(mood_texture, draw_loc, null, Color.White, 0.0f, Vector2.Zero, 1.0f, 
+            }
+
+            aBatch.Draw(mood_texture, draw_loc, null, Color.White, 0.0f, Vector2.Zero, 1.0f,
                 MyLook == LookDirection.Right ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0.0f);
 
             if (_eMyState == State.Held)
+            {
                 aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
+            }
 
             //for (int i = 0; i < 5; ++i)
             //    DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
