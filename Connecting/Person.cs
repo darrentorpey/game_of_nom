@@ -96,6 +96,9 @@ namespace Connecting
                 _CollidingObject = null;
             }
 
+            // I thought this was needed, but so far it isn't
+            //alterMyMood(true);
+
             if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
             {
                 EatingObject.BeingEaten = false;
@@ -230,31 +233,40 @@ namespace Connecting
                 }
             }
 
-            if (_CollidingObject != null && _CollidingObject is Person)
+            if (_CollidingObject != null && _CollidingObject is Person) {
                 // If we're colliding with a person, we're happy (we're very social!)
-                MyMood = Mood.Happy;
+                if (realMood){
+                    MyMood = Mood.Happy;
+                }
+                else
+                {
+                    MyHoverMood = Mood.Happy;
+                }
+            }
             else if (_NearbyFoodSources.Count != 0)
             {
                 // If we're near available food, we're happy
-                MyMood = Mood.Happy;
+                if (realMood)
+                {
+                    MyMood = Mood.Happy;
+                }
+                else
+                {
+                    MyHoverMood = Mood.Happy;
+                }
             }
             else
             {
                 // Otherwise, that makes us a SAD PANDA
-                MyMood = Mood.Sad;
+                if (realMood)
+                {
+                    MyMood = Mood.Sad;
+                }
+                else
+                {
+                    MyHoverMood = Mood.Sad;
+                }
             }
-
-            //if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
-            //{
-            //    EatingObject.BeingEaten = false;
-            //    EatingObject = null;
-            //}
-
-            //if (_NearbyFoodSources.Count > 0)
-            //{
-            //    _NearbyFoodSources.First().BeingEaten = true;
-            //    EatingObject = _NearbyFoodSources.First();
-            //}
         }
 
         public void AccumulateForces()
