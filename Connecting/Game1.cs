@@ -112,7 +112,7 @@ namespace Connecting
                         {
                             Console.Out.WriteLine("on the dot");
                             inTransitByUser = _Persons[i];
-                            _Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
+                            //_Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
                         }
                     }
                 }
@@ -126,8 +126,13 @@ namespace Connecting
             if (this.inTransitByUser != null)
             {
                 this.inTransitByUser.Location = new Vector2(mouseX, mouseY);
+                for (int i = 0; i < _Persons.Length; ++i)
+                {
+                    if (Vector2.Distance(this.inTransitByUser.Location, _Persons[i].Location) < 13.0) {
+                        this.inTransitByUser._TheTexture = Person.s_BallGreen;  
+                    }
+                }
             }
-
 
             if (Mouse.GetState().LeftButton == ButtonState.Released)
             {
