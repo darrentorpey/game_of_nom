@@ -22,7 +22,12 @@ namespace Connecting
             Happy = 0,
             Sad = 1,
             Angry = 2,
-            Confused = 3
+            Confused = 3,
+            Excited = 4,
+            Eating = 5,
+            Surprise = 6,
+
+            Count = 7
         }
 
         public enum LookDirection
@@ -351,14 +356,11 @@ namespace Connecting
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_MoodTextures = new Texture2D[] {
-                aManager.Load<Texture2D>("happy"),
-                aManager.Load<Texture2D>("sad"),
-                aManager.Load<Texture2D>("angry"),
-                aManager.Load<Texture2D>("people_confused_1")
-            };
-
-            s_HeldTexture = aManager.Load<Texture2D>("halo");
+            s_MoodTextures = new Texture2D[(int)Mood.Count];
+            for (int i = 0; i < (int)Mood.Count; ++i)
+                s_MoodTextures[i] = aManager.Load<Texture2D>("people_" + ((Mood)i).ToString() + "_1");
+            
+            s_HeldTexture = aManager.Load<Texture2D>("selection_halo_1");
         }
     }
 }
