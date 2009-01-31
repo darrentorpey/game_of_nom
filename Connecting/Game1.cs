@@ -54,6 +54,7 @@ namespace Connecting
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Person.LoadContent(Content);
+            FoodSource.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
             Random rand = new Random();
@@ -65,12 +66,15 @@ namespace Connecting
                 _Flock.AddPerson(newPerson);
             }
 
+            FoodSource theFood = new FoodSource(new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
+
             _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             // Init people here so that we know the content (textures, etc.) are loaded
             GameObjectManager.Instance._Objects = new List<GameObject> {
                 new Person(new Vector2(100, 100)), 
                 new Person(new Vector2(200, 200)),
-                _Flock
+                _Flock,
+                theFood
             };
         }
 

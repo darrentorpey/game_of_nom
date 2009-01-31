@@ -26,6 +26,7 @@ namespace Connecting
         private Mood MyMood = Mood.Sad;
         private bool _bHeld = false;
         private GameObject _CollidingObject = null;
+        private Stack<GameObject> _NearbyFoodSources = new Stack<GameObject>();
 
         public bool InFlock = false;
 
@@ -68,11 +69,6 @@ namespace Connecting
             _bHeld = false;
         }
 
-        public override void MoveTo(ref Vector2 aLocation)
-        {
-            Location = aLocation;
-        }
-
         public override void Update(GameTime aTime)
         {
             if (InFlock)
@@ -87,18 +83,43 @@ namespace Connecting
 
             if (_bHeld)
             {
+                _NearbyFoodSources.Clear();
+
                 GameObjectManager manager = GameObjectManager.Instance;
+
+                // Look to see if we need to indicate that droping this Person will change their mood
                 _CollidingObject = null;
                 for (int i = 0; i < manager._Objects.Count; ++i)
                 {
-                    if (this != manager._Objects[i] && manager._Objects[i].CollidesWith(this))
-                        _CollidingObject = manager._Objects[i];
+                    GameObject currObj = manager._Objects[i];
+                    if (this != currObj)
+                    {
+                        if (currObj.CollidesWith(this))
+                        {
+                            _CollidingObject = currObj;
+                            if (currObj is FoodSource)
+                            {
+                                _NearbyFoodSources.Push(currObj);
+                            }
+                        }
+                        else if (currObj.InProximity(this, 10.0f) && currObj is FoodSource)
+                        {
+                            _NearbyFoodSources.Push(currObj);
+                        }
+                    }
+
+                    if (_CollidingObject != null && _CollidingObject is Person)
+                        // If we're colliding with a person, we're happy (we're very social!)
+                        MyMood = Mood.Happy;
+                    else if (_NearbyFoodSources.Count != 0) {
+                        // If we're near available food, we're happy
+                        MyMood = Mood.Happy;
+                    } else {
+                        // Otherwise, that makes us a SAD PANDA
+                        MyMood = Mood.Sad;
+                    }
                 }
 
-                if (_CollidingObject != null)
-                    MyMood = Mood.Happy;
-                else
-                    MyMood = Mood.Sad;
             }
         }
 

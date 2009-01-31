@@ -33,9 +33,22 @@ namespace Connecting
             return false;
         }
 
+        public bool InProximity(GameObject aOtherObj, float proximity)
+        {
+            float dist;
+            Vector2.Distance(ref Location, ref aOtherObj.Location, out dist);
+            if (dist < (Radius + aOtherObj.Radius + proximity))
+                return true;
+            return false;
+        }
+
         public abstract void Hold();
         public abstract void Drop();
-        public abstract void MoveTo(ref Vector2 aLocation);
+       
+        public virtual void MoveTo(ref Vector2 aLocation)
+        {
+            Location = aLocation;
+        }
 
         public abstract void Draw(SpriteBatch aBatch, GameTime aTime);
         public abstract void Update(GameTime aTime);
