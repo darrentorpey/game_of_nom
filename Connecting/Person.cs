@@ -115,20 +115,19 @@ namespace Connecting
                 GameObjectManager manager = GameObjectManager.Instance;
                 if (_CollidingObject is PersonFlock)
                 {
-                    manager._Objects.Remove(this);
+                    manager.RemoveObject(this);
                     ((PersonFlock)_CollidingObject).AddPerson(this);
-                    _eMyState = State.Flocking;
                 }
                 else if (_CollidingObject is Person)
                 {
-                    manager._Objects.Remove(this);
-                    manager._Objects.Remove(_CollidingObject);
+                    manager.RemoveObject(this);
+                    manager.RemoveObject(_CollidingObject);
+
                     PersonFlock flock = new PersonFlock();
                     flock.AddPerson(this);
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
-                    manager._Objects.Add(flock);
-                    _eMyState = State.Flocking;
+                    manager.AddObject(flock);
                 }
 
                 _CollidingObject = null;
@@ -158,15 +157,13 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
-            if (ParentFlock != null)
-                _eMyState = State.Flocking;
-
             if (_eMyState == State.Eating && EatingObject.Dead)
             {
                 EatingObject = null;
                 _eMyState = State.Alone;
                 _eMyAloneState = AloneState.StandingStill;
             }
+
             switch(_eMyState)
             {
                 case State.Eating:
@@ -192,6 +189,9 @@ namespace Connecting
                     switch (MyMood)
                     {
                         // Happy to Sad if sensitivity is too high
+                        case Mood.Excited:
+                            MyMood = Mood.Happy; 
+                            break;
                         case Mood.Happy:
                             if (_fSensitivity > 50.0f)
                                 MyMood = Mood.Sad;
@@ -303,9 +303,9 @@ namespace Connecting
 
             // Look to see if we need to indicate that droping this Person will change their mood
             _CollidingObject = null;
-            for (int i = 0; i < manager._Objects.Count; ++i)
+            for (int i = 0; i < manager.Count; ++i)
             {
-                GameObject currObj = manager._Objects[i];
+                GameObject currObj = manager[i];
                 if (this != currObj)
                 {
                     if (currObj.CollidesWith(this))

@@ -77,7 +77,7 @@ namespace Connecting
                         BeingEaten = false; // This location may be a bad idea
                         SoundState.Instance.PlayNomSound(this, aTime);
                         // Remove self from the game object manager
-                        GameObjectManager.Instance._Objects.Remove(this);
+                        GameObjectManager.Instance.RemoveObject(this);
                     }
                     else
                     {

@@ -27,6 +27,9 @@ namespace Connecting
     public class PersonFlock : GameObject
     {
         private List<Person> _People = new List<Person>();
+        private List<Person> _AddPeople = new List<Person>();
+        private List<Person> _RemovePeople = new List<Person>();
+
         private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
         private float _fCurrentRadius = 0.0f;
         private Vector2 _CurrentCenterOfMass = Vector2.Zero;
@@ -58,14 +61,12 @@ namespace Connecting
 
         public void AddPerson(Person aPerson)
         {
-            _People.Add(aPerson);
-            aPerson.AddedToFlock(this);
+            _AddPeople.Add(aPerson);
         }
 
         public void RemovePerson(Person aPerson)
         {
-            _People.Remove(aPerson);
-            aPerson.RemovedFromFlock();
+            _RemovePeople.Add(aPerson);
         }
 
         public override void Hold()
@@ -92,10 +93,7 @@ namespace Connecting
                 float fdist;
                 Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
                 if (fdist > 15.0f * _People.Count)
-                {
-                    GameObjectManager.Instance._Objects.Add(_People[i]);
-                    RemovePerson(_People[i]);
-                }
+                    RemoveFromFlock(_People[i]);
             }
 
             for (int i = 0; i < _ExternalForces.Count; ++i)
@@ -105,15 +103,18 @@ namespace Connecting
                     _ExternalForces.RemoveAt(i);
             }
 
-            if (_People.Count == 1)
-            {
-                GameObjectManager.Instance._Objects.Remove(this);
-                GameObjectManager.Instance._Objects.Add(_People[0]);
-                RemovePerson(_People[0]);
+            for (int i = 0; i < _AddPeople.Count; ++i)
+                AddToFlock(_AddPeople[i]);
+            _AddPeople.Clear();
+            for (int i = 0; i < _RemovePeople.Count; ++i)
+                RemoveFromFlock(_RemovePeople[i]);
+            _RemovePeople.Clear();
 
-            }
-            else if (_People.Count == 0)
-                GameObjectManager.Instance._Objects.Remove(this);
+            if (_People.Count == 1)
+                RemoveFromFlock(_People[0]);
+            
+            if (_People.Count == 0)
+                GameObjectManager.Instance.RemoveObject(this);
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
@@ -144,6 +145,20 @@ namespace Connecting
             }
 
             return force;
+        }
+
+        private void AddToFlock(Person aPerson)
+        {
+            GameObjectManager.Instance.RemoveObject(aPerson);
+            _People.Add(aPerson);
+            aPerson.AddedToFlock(this);
+        }
+
+        private void RemoveFromFlock(Person aPerson)
+        {
+            _People.Remove(aPerson);
+            GameObjectManager.Instance.AddObject(aPerson);
+            aPerson.RemovedFromFlock();
         }
 
         private Vector2 CalculateCenterOfMass()
