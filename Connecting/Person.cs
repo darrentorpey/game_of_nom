@@ -14,6 +14,7 @@ namespace Connecting
 
         public static Texture2D s_BallRed;
         public static Texture2D s_BallGreen;
+        public static Texture2D s_BallYellow;
 
         public Vector2 Location;
         public Vector2 FlockLocation;
@@ -42,6 +43,7 @@ namespace Connecting
         {
             s_BallRed = aManager.Load<Texture2D>("PersonSprite");
             s_BallGreen = aManager.Load<Texture2D>("PersonSprite2");
+            s_BallYellow = aManager.Load<Texture2D>("PersonSprite3");
 
             // Set the default texture
             //this._TheTexture = s_BallRed;

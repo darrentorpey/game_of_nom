@@ -106,23 +106,25 @@ namespace Connecting
 
         private void processMouseEvents()
         {
-            var mouseX = Mouse.GetState().X;
-            var mouseY = Mouse.GetState().Y;
+            int mouseX = Mouse.GetState().X;
+            int mouseY = Mouse.GetState().Y;
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
-                if (inTransitByUser == null)
+                if (this.inTransitByUser == null)
                 {
-                    Console.Out.WriteLine("helloooooo nurse!");
+                    //Console.Out.WriteLine("helloooooo nurse!");
                     for (int i = 0; i < _Persons.Length; ++i)
                     {
-                        var dist = Vector2.Distance(_Persons[i].Location, new Vector2(mouseX, mouseY));
-                        Console.Out.WriteLine("dist: " + dist);
+                        float dist = Vector2.Distance(_Persons[i].Location, new Vector2(mouseX, mouseY));
+                        //Console.Out.WriteLine("dist: " + dist);
                         if (dist < 13.0)
                         {
-                            Console.Out.WriteLine("on the dot");
-                            inTransitByUser = _Persons[i];
+                            //Console.Out.WriteLine("on the dot");
+                            this.inTransitByUser = _Persons[i];
                             //_Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
+                            Console.Out.WriteLine("YELLOW");
+                            this.inTransitByUser._TheTexture = Person.s_BallYellow;
                         }
                     }
                 }
@@ -138,9 +140,21 @@ namespace Connecting
                 this.inTransitByUser.Location = new Vector2(mouseX, mouseY);
                 for (int i = 0; i < _Persons.Length; ++i)
                 {
-                    if (Vector2.Distance(this.inTransitByUser.Location, _Persons[i].Location) < 13.0) {
-                        this.inTransitByUser._TheTexture = Person.s_BallGreen;  
+                    bool touching = false;
+                    if (this.inTransitByUser != _Persons[i] && Vector2.Distance(this.inTransitByUser.Location, _Persons[i].Location) < 26.0) {
+                        touching = true;
                     }
+                    if (touching)
+                    {
+                        Console.Out.WriteLine("GREEN");
+                        this.inTransitByUser._TheTexture = Person.s_BallGreen;
+                    }
+                    else
+                    {
+                        Console.Out.WriteLine("RED");
+                        this.inTransitByUser._TheTexture = Person.s_BallRed;
+                    }
+                    
                 }
             }
 
