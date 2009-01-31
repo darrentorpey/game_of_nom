@@ -116,49 +116,7 @@ namespace Connecting
             {    
                 if (_bHeld)
                 {
-                    _NearbyFoodSources.Clear();
-
-                    GameObjectManager manager = GameObjectManager.Instance;
-
-                    // Look to see if we need to indicate that droping this Person will change their mood
-                    _CollidingObject = null;
-                    for (int i = 0; i < manager._Objects.Count; ++i)
-                    {
-                        GameObject currObj = manager._Objects[i];
-                        if (this != currObj)
-                        {
-                            if (currObj.CollidesWith(this))
-                            {
-                                _CollidingObject = currObj;
-                                if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
-                                {
-                                    _NearbyFoodSources.Push((FoodSource)currObj);
-                                }
-                            }
-                            else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
-                            {
-                                _NearbyFoodSources.Push((FoodSource)currObj);
-                            }
-                            else
-                            {
-                                Console.WriteLine("Here: " + currObj.InProximity(this, FOOD_PROXIMITY) + ", " + (this.EatingObject == currObj));
-                            }
-                        }
-                    }
-
-                    if (_CollidingObject != null && _CollidingObject is Person)
-                        // If we're colliding with a person, we're happy (we're very social!)
-                        MyMood = Mood.Happy;
-                    else if (EatingObject != null || _NearbyFoodSources.Count != 0)
-                    {
-                        // If we're near available food, we're happy
-                        MyMood = Mood.Happy;
-                    }
-                    else
-                    {
-                        // Otherwise, that makes us a SAD PANDA
-                        MyMood = Mood.Sad;
-                    }
+                    alterMyMood(false);
                 }
                 else
                 {
@@ -166,6 +124,65 @@ namespace Connecting
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
                 }
             }
+        }
+
+        private void alterMyMood(bool realMood)
+        {
+            _NearbyFoodSources.Clear();
+
+            GameObjectManager manager = GameObjectManager.Instance;
+
+            // Look to see if we need to indicate that droping this Person will change their mood
+            _CollidingObject = null;
+            for (int i = 0; i < manager._Objects.Count; ++i)
+            {
+                GameObject currObj = manager._Objects[i];
+                if (this != currObj)
+                {
+                    if (currObj.CollidesWith(this))
+                    {
+                        _CollidingObject = currObj;
+                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
+                        {
+                            _NearbyFoodSources.Push((FoodSource)currObj);
+                        }
+                    }
+                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+                    {
+                        _NearbyFoodSources.Push((FoodSource)currObj);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Here: " + currObj.InProximity(this, FOOD_PROXIMITY) + ", " + (this.EatingObject == currObj));
+                    }
+                }
+            }
+
+            if (_CollidingObject != null && _CollidingObject is Person)
+                // If we're colliding with a person, we're happy (we're very social!)
+                MyMood = Mood.Happy;
+            else if (_NearbyFoodSources.Count != 0)
+            {
+                // If we're near available food, we're happy
+                MyMood = Mood.Happy;
+            }
+            else
+            {
+                // Otherwise, that makes us a SAD PANDA
+                MyMood = Mood.Sad;
+            }
+
+            //if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
+            //{
+            //    EatingObject.BeingEaten = false;
+            //    EatingObject = null;
+            //}
+
+            //if (_NearbyFoodSources.Count > 0)
+            //{
+            //    _NearbyFoodSources.First().BeingEaten = true;
+            //    EatingObject = _NearbyFoodSources.First();
+            //}
         }
 
         public void AccumulateForces()
