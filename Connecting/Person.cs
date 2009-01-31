@@ -70,7 +70,7 @@ namespace Connecting
         private Rectangle _Bounds;
         private int _iNextThink = 0;
         private int _iNextLook = 0;
-        private bool _bLooking = false;
+        private float _fSensitivity = 0.0f;
         private Vector2 _WalkVelocity = Vector2.Zero;
 
         private Vector2[] _Forces = new Vector2[5];      
@@ -86,6 +86,18 @@ namespace Connecting
 
             _Velocity = new Vector2((float)RandomInstance.Instance.NextDouble(), 
                 (float)RandomInstance.Instance.NextDouble());
+        }
+
+        public void AddedToFlock(PersonFlock aFlock)
+        {
+            ParentFlock = aFlock;
+            _eMyState = State.Flocking;
+        }
+
+        public void RemovedFromFlock()
+        {
+            ParentFlock = null;
+            _eMyState = State.Alone;
         }
 
         public override void Hold()
@@ -145,12 +157,54 @@ namespace Connecting
             switch(_eMyState)
             {
                 case State.Flocking:
-                    MyMood = Mood.Happy;
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+
+                    // Look in the direction we're being dragged.
+                    Vector2 moving = Location - ParentFlock.Location;
+                    MyLook = moving.X < 0 ? LookDirection.Right : LookDirection.Left;
+
+                    // When you're flocking, you're sensitive to other people.
+                    // Use the avoidance force as a basis
+                    _fSensitivity += _Forces[2].Length() * .5f;
+                    
+                    // Reduce sensitivity depending on the number of people in my flock
+                    float dec = (1.0f / (float)ParentFlock.Count) * 200.0f;
+                    _fSensitivity -= dec;
+                    if (_fSensitivity < 0)
+                        _fSensitivity = 0.0f;
+                    switch (MyMood)
+                    {
+                        // Happy to Sad if sensitivity is too high
+                        case Mood.Happy:
+                            if (_fSensitivity > 50.0f)
+                                MyMood = Mood.Sad;
+                            break;
+                        // If sensitivity drops below 10, then we can go back to happy.
+                        case Mood.Sad:
+                            if (_fSensitivity < 20.0f)
+                                MyMood = Mood.Happy;
+                            else if (_fSensitivity > 120.0f)
+                                MyMood = Mood.Angry;
+                            break;
+                        case Mood.Angry:
+                            if (_fSensitivity < 40.0f)
+                                MyMood = Mood.Sad;
+                            if (_fSensitivity > 400.0f)
+                            {
+                                // EXPLODE!
+                                ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 600.0f, 3.0f, 120));
+                                ParentFlock.RemovePerson(this);
+
+                                MyMood = Mood.Sad;
+                                _eMyState = State.Alone;
+                            }
+                            break;
+                    }
                     break;
 
                 case State.Alone:
+                    _fSensitivity = 0.0f;
                     AccumulateForces();
                     if (_iNextThink <= 0)
                     {
@@ -278,7 +332,7 @@ namespace Connecting
             }
         }
 
-        public void AccumulateForces()
+        private void AccumulateForces()
         {
             Vector2 forces = Vector2.Zero;
 
@@ -290,33 +344,31 @@ namespace Connecting
                 _Forces[4] = ParentFlock.GetExternalForces(this);
 
                 // Always move toward CoM.  Pull harder if farther away.
-                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .2f, Radius * ParentFlock.People.Count);
+                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .2f, Radius * ParentFlock.Count);
                 
                 // Always move toward Target location
                 _Forces[1] = GetForceToward(ParentFlock.Location, .3f, 2.5f);
-                //forces += GetForceToward(ParentFlock.Location, 3.0f, Radius * ParentFlock.People.Count);
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;
                 Vector2 matchingForce = Vector2.Zero;
-                for (int i = 0; i < ParentFlock.People.Count; ++i)
+                for (int i = 0; i < ParentFlock.Count; ++i)
                 {
-                    if (ParentFlock.People[i] == this)
+                    if (ParentFlock[i] == this)
                         continue;
 
                     float dist;
-                    Vector2.Distance(ref ParentFlock.People[i].Location, ref this.Location, out dist);
+                    Vector2.Distance(ref ParentFlock[i].Location, ref this.Location, out dist);
                     if (dist < 40.0f)
                     {
-                        Vector2 force = (this.Location - ParentFlock.People[i].Location);
+                        Vector2 force = (this.Location - ParentFlock[i].Location);
                         avoidanceForce += force;
                     }
 
                     // Match velocity with other boids
-                    matchingForce += ParentFlock.People[i].Velocity;
+                    matchingForce += ParentFlock[i].Velocity;
                 }
                 _Forces[2] = avoidanceForce;
-                //_Forces[3] = matchingForce / (ParentFlock.People.Count - 1) * .5f;
 
                 for (int i = 0; i < 5; ++i)
                     forces += _Forces[i];

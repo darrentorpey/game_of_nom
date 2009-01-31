@@ -41,9 +41,14 @@ namespace Connecting
             get { return _CurrentCenterOfMass; }
         }
 
-        public List<Person> People
+        public Person this[int aiVal]
         {
-            get { return _People; }
+            get { return _People[aiVal]; }
+        }
+
+        public int Count
+        {
+            get { return _People.Count; }
         }
 
         public PersonFlock()
@@ -54,7 +59,13 @@ namespace Connecting
         public void AddPerson(Person aPerson)
         {
             _People.Add(aPerson);
-            aPerson.ParentFlock = this;
+            aPerson.AddedToFlock(this);
+        }
+
+        public void RemovePerson(Person aPerson)
+        {
+            _People.Remove(aPerson);
+            aPerson.RemovedFromFlock();
         }
 
         public override void Hold()
@@ -82,9 +93,8 @@ namespace Connecting
                 Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
                 if (fdist > 15.0f * _People.Count)
                 {
-                    _People[i].ParentFlock = null;
                     GameObjectManager.Instance._Objects.Add(_People[i]);
-                    _People.RemoveAt(i);
+                    RemovePerson(_People[i]);
                 }
             }
 
@@ -98,10 +108,8 @@ namespace Connecting
             if (_People.Count == 1)
             {
                 GameObjectManager.Instance._Objects.Remove(this);
-
-                People[0].ParentFlock = null;
                 GameObjectManager.Instance._Objects.Add(_People[0]);
-                _People.RemoveAt(0);
+                RemovePerson(_People[0]);
 
             }
             else if (_People.Count == 0)
@@ -131,7 +139,6 @@ namespace Connecting
                 direction.Normalize();
 
                 float ffactor = _ExternalForces[i].fForce - (fdist * _ExternalForces[i].fFalloff);
-                Console.WriteLine(ffactor);
                 if(ffactor > 0)
                     force += direction * ffactor;
             }
