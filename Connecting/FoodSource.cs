@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Content;
 
 namespace Connecting
 {
-    class FoodSource : GameObject
+    public class FoodSource : GameObject
     {
 
         const float c_decayMultiplier = 5.0f;
@@ -17,6 +17,9 @@ namespace Connecting
 
         private static Texture2D[] s_FoodTextures;
 
+        private bool _BeingEaten = false;
+
+        public bool BeingEaten { get { return _BeingEaten; } set { _BeingEaten = value; } }
 
         public override float Radius { get { return 30.0f; } }
 
@@ -46,6 +49,10 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
+            //if (this is FoodSource) {
+            //    Console.WriteLine("hello " + ((FoodSource)this)._BeingEaten);
+            //}
+
             _TicksPassed++;
 
             if (_TicksPassed%(10*c_decayMultiplier) == 0)

@@ -15,6 +15,7 @@ namespace Connecting
         const int c_iRandDelay = 420;
         const int c_iLookTime = 2000;
         const int c_iLookDelay = 400;
+        const float FOOD_PROXIMITY = 10.0f;
 
         public enum Mood
         {
@@ -37,10 +38,12 @@ namespace Connecting
         };
                 
         private Mood MyMood = Mood.Sad;
+        private Mood? MyHoverMood = null;
         private LookDirection MyLook = LookDirection.Left;
+        
         private bool _bHeld = false;
         private GameObject _CollidingObject = null;
-        private Stack<GameObject> _NearbyFoodSources = new Stack<GameObject>();
+        private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private Vector2 _Velocity;
         private Rectangle _Bounds;
         private int _iNextThink = 0;
@@ -93,11 +96,24 @@ namespace Connecting
                 _CollidingObject = null;
             }
 
+            if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
+            {
+                EatingObject.BeingEaten = false;
+                EatingObject = null;
+            }
+
+            if (_NearbyFoodSources.Count > 0)
+            {
+                _NearbyFoodSources.First().BeingEaten = true;
+                EatingObject = _NearbyFoodSources.First();
+            }
+
             _bHeld = false;
         }
 
         public override void Update(GameTime aTime)
         {
+
             if (ParentFlock != null)
             {
                 AccumulateForces();
@@ -114,42 +130,7 @@ namespace Connecting
             {    
                 if (_bHeld)
                 {
-                    _NearbyFoodSources.Clear();
-
-                    GameObjectManager manager = GameObjectManager.Instance;
-
-                    // Look to see if we need to indicate that droping this Person will change their mood
-                    _CollidingObject = null;
-                    for (int i = 0; i < manager._Objects.Count; ++i)
-                    {
-                        GameObject currObj = manager._Objects[i];
-                        if (this != currObj)
-                        {
-                            if (currObj.CollidesWith(this))
-                            {
-                                _CollidingObject = currObj;
-                                if (currObj is FoodSource)
-                                {
-                                    _NearbyFoodSources.Push(currObj);
-                                }
-                            }
-                            else if (currObj.InProximity(this, 10.0f) && currObj is FoodSource)
-                            {
-                                _NearbyFoodSources.Push(currObj);
-                            }
-                        }
-
-                        if (_CollidingObject != null && _CollidingObject is Person)
-                            // If we're colliding with a person, we're happy (we're very social!)
-                            MyMood = Mood.Happy;
-                        else if (_NearbyFoodSources.Count != 0) {
-                            // If we're near available food, we're happy
-                            MyMood = Mood.Happy;
-                        } else {
-                            // Otherwise, that makes us a SAD PANDA
-                            MyMood = Mood.Sad;
-                        }
-                    }
+                    alterMyMood(false);
                 }
                 else
                 {
@@ -215,6 +196,65 @@ namespace Connecting
                         _WalkVelocity.Y = -_WalkVelocity.Y;
                 }
             }
+        }
+
+        private void alterMyMood(bool realMood)
+        {
+            _NearbyFoodSources.Clear();
+
+            GameObjectManager manager = GameObjectManager.Instance;
+
+            // Look to see if we need to indicate that droping this Person will change their mood
+            _CollidingObject = null;
+            for (int i = 0; i < manager._Objects.Count; ++i)
+            {
+                GameObject currObj = manager._Objects[i];
+                if (this != currObj)
+                {
+                    if (currObj.CollidesWith(this))
+                    {
+                        _CollidingObject = currObj;
+                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
+                        {
+                            _NearbyFoodSources.Push((FoodSource)currObj);
+                        }
+                    }
+                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+                    {
+                        _NearbyFoodSources.Push((FoodSource)currObj);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Here: " + currObj.InProximity(this, FOOD_PROXIMITY) + ", " + (this.EatingObject == currObj));
+                    }
+                }
+            }
+
+            if (_CollidingObject != null && _CollidingObject is Person)
+                // If we're colliding with a person, we're happy (we're very social!)
+                MyMood = Mood.Happy;
+            else if (_NearbyFoodSources.Count != 0)
+            {
+                // If we're near available food, we're happy
+                MyMood = Mood.Happy;
+            }
+            else
+            {
+                // Otherwise, that makes us a SAD PANDA
+                MyMood = Mood.Sad;
+            }
+
+            //if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
+            //{
+            //    EatingObject.BeingEaten = false;
+            //    EatingObject = null;
+            //}
+
+            //if (_NearbyFoodSources.Count > 0)
+            //{
+            //    _NearbyFoodSources.First().BeingEaten = true;
+            //    EatingObject = _NearbyFoodSources.First();
+            //}
         }
 
         public void AccumulateForces()
@@ -293,7 +333,13 @@ namespace Connecting
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_MoodTextures[0].Width / 2), Location.Y - (float)(s_MoodTextures[0].Height / 2));
-            aBatch.Draw(s_MoodTextures[(int)MyMood], draw_loc, null, Color.White, 0.0f, Vector2.Zero, 1.0f, 
+            Texture2D mood_texture;
+            if (MyHoverMood != null)
+                mood_texture = s_MoodTextures[(int)MyHoverMood];
+            else
+                mood_texture = s_MoodTextures[(int)MyMood];
+           
+            aBatch.Draw(mood_texture, draw_loc, null, Color.White, 0.0f, Vector2.Zero, 1.0f, 
                 MyLook == LookDirection.Right ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0.0f);
 
             if (_bHeld)
