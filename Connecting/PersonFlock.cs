@@ -99,6 +99,18 @@ namespace Connecting
                 if (_ExternalForces[i].iLifeLeft <= 0)
                     _ExternalForces.RemoveAt(i);
             }
+
+            if (_People.Count == 1)
+            {
+                GameObjectManager.Instance._Objects.Remove(this);
+
+                People[0].ParentFlock = null;
+                GameObjectManager.Instance._Objects.Add(_People[0]);
+                _People.RemoveAt(0);
+
+            }
+            else if (_People.Count == 0)
+                GameObjectManager.Instance._Objects.Remove(this);
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
