@@ -87,9 +87,6 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            MouseState state = Mouse.GetState();
-
-            _Flock.TargetLocation = new Vector2(state.X, state.Y);
             _Flock.Update(gameTime);
 
             base.Update(gameTime);

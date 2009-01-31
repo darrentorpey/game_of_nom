@@ -38,12 +38,16 @@ namespace Connecting
                         continue;
                     float dist;
                     Vector2.Distance(ref _People[i].Location, ref _People[z].Location, out dist);
-                    if (dist < 20.0f)
+                    if (dist < 25.0f)
                     {
                         v2 += (_People[i].Location - _People[z].Location);
                     }
+
                 }
-                _People[i].Location += v0 + v1 + v2;
+                Vector2 speed = v0 + v1 + v2;
+                speed.Normalize();
+                speed *= 3.0f;
+                _People[i].Location += speed;
             }
         }
 
