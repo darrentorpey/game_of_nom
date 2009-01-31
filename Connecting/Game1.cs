@@ -41,9 +41,6 @@ namespace Connecting
         /// </summary>
         protected override void Initialize()
         {
-            _Persons = new Person[] {
-                new Person()
-            };
 
             base.Initialize();
         }
@@ -58,7 +55,13 @@ namespace Connecting
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Person.LoadContent(Content);
-            font = Content.Load<SpriteFont>("Helvetica");            
+            font = Content.Load<SpriteFont>("Helvetica");
+
+            // Init people here so that we know the content (textures, etc.) are loaded
+            _Persons = new Person[] {
+                new Person(new Vector2(100, 100)), 
+                new Person(new Vector2(200, 200))
+            };
         }
 
         /// <summary>
@@ -89,15 +92,29 @@ namespace Connecting
             base.Update(gameTime);
         }
 
+        Person inTransitByUser;
+
         private void processMouseEvents()
         {
+            var mouseX = Mouse.GetState().X;
+            var mouseY = Mouse.GetState().Y;
+
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
-                Console.Out.WriteLine("helloooooo nurse!");
-                for (int i = 0; i < _Persons.Length; ++i)
+                if (inTransitByUser == null)
                 {
-                    //_Persons[i]
-                    Console.Out.WriteLine("on the dot");
+                    Console.Out.WriteLine("helloooooo nurse!");
+                    for (int i = 0; i < _Persons.Length; ++i)
+                    {
+                        var dist = Vector2.Distance(_Persons[i].Location, new Vector2(mouseX, mouseY));
+                        Console.Out.WriteLine("dist: " + dist);
+                        if (dist < 13.0)
+                        {
+                            Console.Out.WriteLine("on the dot");
+                            inTransitByUser = _Persons[i];
+                            _Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
+                        }
+                    }
                 }
             }
 
@@ -105,6 +122,21 @@ namespace Connecting
             {
                 Console.Out.WriteLine("bye nurse!");
             }
+
+            if (this.inTransitByUser != null)
+            {
+                this.inTransitByUser.Location = new Vector2(mouseX, mouseY);
+            }
+
+
+            if (Mouse.GetState().LeftButton == ButtonState.Released)
+            {
+                if (this.inTransitByUser != null)
+                {
+                    this.inTransitByUser = null;
+                }
+            }
+
         }
 
         /// <summary>
