@@ -10,6 +10,8 @@ namespace Connecting
 {
     public class Person : GameObject
     {
+        const float FOOD_PROXIMITY = 10.0f;
+
         const float c_fSpeed = 3.0f;
 
         public enum Mood
@@ -24,9 +26,10 @@ namespace Connecting
 
         public float Instability = 0.0f;
         private Mood MyMood = Mood.Sad;
+        private Mood? MyHoverMood = null;
         private bool _bHeld = false;
         private GameObject _CollidingObject = null;
-        private Stack<GameObject> _NearbyFoodSources = new Stack<GameObject>();
+        private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private Vector2 _Velocity;
 
         private Vector2[] _Forces = new Vector2[5];
@@ -75,11 +78,24 @@ namespace Connecting
                 _CollidingObject = null;
             }
 
+            if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
+            {
+                EatingObject.BeingEaten = false;
+                EatingObject = null;
+            }
+
+            if (_NearbyFoodSources.Count > 0)
+            {
+                _NearbyFoodSources.First().BeingEaten = true;
+                EatingObject = _NearbyFoodSources.First();
+            }
+
             _bHeld = false;
         }
 
         public override void Update(GameTime aTime)
         {
+
             if (ParentFlock != null)
             {
                 AccumulateForces();
@@ -114,34 +130,40 @@ namespace Connecting
                             if (currObj.CollidesWith(this))
                             {
                                 _CollidingObject = currObj;
-                                if (currObj is FoodSource)
+                                if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
                                 {
-                                    _NearbyFoodSources.Push(currObj);
+                                    _NearbyFoodSources.Push((FoodSource)currObj);
                                 }
                             }
-                            else if (currObj.InProximity(this, 10.0f) && currObj is FoodSource)
+                            else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
                             {
-                                _NearbyFoodSources.Push(currObj);
+                                _NearbyFoodSources.Push((FoodSource)currObj);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Here: " + currObj.InProximity(this, FOOD_PROXIMITY) + ", " + (this.EatingObject == currObj));
                             }
                         }
+                    }
 
-                        if (_CollidingObject != null && _CollidingObject is Person)
-                            // If we're colliding with a person, we're happy (we're very social!)
-                            MyMood = Mood.Happy;
-                        else if (_NearbyFoodSources.Count != 0) {
-                            // If we're near available food, we're happy
-                            MyMood = Mood.Happy;
-                        } else {
-                            // Otherwise, that makes us a SAD PANDA
-                            MyMood = Mood.Sad;
-                        }
+                    if (_CollidingObject != null && _CollidingObject is Person)
+                        // If we're colliding with a person, we're happy (we're very social!)
+                        MyMood = Mood.Happy;
+                    else if (EatingObject != null || _NearbyFoodSources.Count != 0)
+                    {
+                        // If we're near available food, we're happy
+                        MyMood = Mood.Happy;
+                    }
+                    else
+                    {
+                        // Otherwise, that makes us a SAD PANDA
+                        MyMood = Mood.Sad;
                     }
                 }
                 else
                 {
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
-                    MyMood = Mood.Sad;
                 }
             }
         }
@@ -211,7 +233,16 @@ namespace Connecting
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_MoodTextures[0].Width / 2), Location.Y - (float)(s_MoodTextures[0].Height / 2));
-            aBatch.Draw(s_MoodTextures[(int)MyMood], draw_loc, Color.White);
+            Texture2D mood_texture;
+            if (MyHoverMood != null)
+            {
+                mood_texture = s_MoodTextures[(int)MyHoverMood];
+            }
+            else
+            {
+                mood_texture = s_MoodTextures[(int)MyMood];
+            }
+            aBatch.Draw(mood_texture, draw_loc, Color.White);
 
             if (_bHeld)
                 aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
