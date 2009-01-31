@@ -24,7 +24,6 @@ namespace Connecting
         SpriteFont font;
 
         PersonFlock _Flock = new PersonFlock();
-        Person[] _Persons;
 
         public Game1()
         {
@@ -61,14 +60,15 @@ namespace Connecting
             // Add lots of people around randomly
             for (int i = 0; i < 20; ++i)
             {
-                _Flock.AddPerson(new Person(
-                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height))
-                ));
+                Person newPerson = new Person(
+                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
+                newPerson.InFlock = true;
+                _Flock.AddPerson(newPerson);
             }
 
             _Flock.TargetLocation = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             // Init people here so that we know the content (textures, etc.) are loaded
-            _Persons = new Person[] {
+            GameObjectManager.Instance._Persons = new Person[] {
                 new Person(new Vector2(100, 100)), 
                 new Person(new Vector2(200, 200))
             };
@@ -98,6 +98,10 @@ namespace Connecting
             _Flock.Update(gameTime);
             processMouseEvents();
 
+            GameObjectManager manager = GameObjectManager.Instance;
+            for (int i = 0; i < manager._Persons.Length; ++i)
+                manager._Persons[i].Update(gameTime);
+
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
@@ -113,18 +117,19 @@ namespace Connecting
             {
                 if (this.inTransitByUser == null)
                 {
+                    GameObjectManager manager = GameObjectManager.Instance;
                     //Console.Out.WriteLine("helloooooo nurse!");
-                    for (int i = 0; i < _Persons.Length; ++i)
+                    for (int i = 0; i < manager._Persons.Length; ++i)
                     {
-                        float dist = Vector2.Distance(_Persons[i].Location, new Vector2(mouseX, mouseY));
+                        float dist = Vector2.Distance(manager._Persons[i].Location, new Vector2(mouseX, mouseY));
                         //Console.Out.WriteLine("dist: " + dist);
                         if (dist < 13.0)
                         {
                             //Console.Out.WriteLine("on the dot");
-                            this.inTransitByUser = _Persons[i];
+                            this.inTransitByUser = manager._Persons[i];
                             //_Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
-                            Console.Out.WriteLine("YELLOW");
-                            this.inTransitByUser._TheTexture = Person.s_BallYellow;
+                            Console.Out.WriteLine("Held");
+                            manager._Persons[i].Held = true;
                         }
                     }
                 }
@@ -132,36 +137,20 @@ namespace Connecting
 
             if (Mouse.GetState().RightButton == ButtonState.Pressed)
             {
-                Console.Out.WriteLine("bye nurse!");
+                Console.Out.WriteLine("[clear]");
             }
 
             if (this.inTransitByUser != null)
             {
                 this.inTransitByUser.Location = new Vector2(mouseX, mouseY);
-                for (int i = 0; i < _Persons.Length; ++i)
-                {
-                    bool touching = false;
-                    if (this.inTransitByUser != _Persons[i] && Vector2.Distance(this.inTransitByUser.Location, _Persons[i].Location) < 26.0) {
-                        touching = true;
-                    }
-                    if (touching)
-                    {
-                        Console.Out.WriteLine("GREEN");
-                        this.inTransitByUser._TheTexture = Person.s_BallGreen;
-                    }
-                    else
-                    {
-                        Console.Out.WriteLine("RED");
-                        this.inTransitByUser._TheTexture = Person.s_BallRed;
-                    }
-                    
-                }
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Released)
             {
                 if (this.inTransitByUser != null)
                 {
+                    Console.Out.WriteLine("Sad");
+                    inTransitByUser.Held = false;
                     this.inTransitByUser = null;
                 }
             }
@@ -179,8 +168,9 @@ namespace Connecting
             spriteBatch.Begin();
             spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
             _Flock.Draw(spriteBatch, gameTime);
-            for (int i = 0; i < _Persons.Length; ++i)
-                _Persons[i].Draw(spriteBatch, gameTime);
+            GameObjectManager manager = GameObjectManager.Instance;
+            for (int i = 0; i < manager._Persons.Length; ++i)
+                manager._Persons[i].Draw(spriteBatch, gameTime);
 
             spriteBatch.End();
 

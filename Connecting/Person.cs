@@ -12,45 +12,78 @@ namespace Connecting
     {
         const float c_fSpeed = 3.0f;
 
-        public static Texture2D s_BallRed;
-        public static Texture2D s_BallGreen;
-        public static Texture2D s_BallYellow;
+        public enum Mood
+        {
+            Happy = 0,
+            Sad = 1,
+            Angry = 2
+        }
+
+        public static Texture2D[] s_MoodTextures;
+        public static Texture2D s_HeldTexture;
 
         public Vector2 Location;
-        public Vector2 FlockLocation;
         public float Instability = 0.0f;
+        public Mood MyMood = Mood.Sad;
 
-        public Texture2D _TheTexture;
-        
+        public bool InFlock = false;
+        public bool Held = false;
 
         public Person(Vector2 aStartLocation)
         {
             Location = aStartLocation;
-            this._TheTexture = Person.s_BallYellow;
         }
 
         public void Update(GameTime aTime)
         {
-            if (Instability < 20.0f)
-                _TheTexture = s_BallYellow;
-            else if (Instability < 50.0f)
-                _TheTexture = s_BallRed;
-            else
-                _TheTexture = s_BallGreen;
+            if (InFlock)
+            {
+                if (Instability < 20.0f)
+                    MyMood = Mood.Happy;
+                else if (Instability < 50.0f)
+                    MyMood = Mood.Sad;
+                else
+                    MyMood = Mood.Angry;
+            }
 
+            if (Held)
+            {
+                GameObjectManager manager = GameObjectManager.Instance;
+                bool touching = false;
+                for (int i = 0; i < manager._Persons.Length; ++i)
+                {
+                    if (this != manager._Persons[i] &&
+                        Vector2.Distance(Location, manager._Persons[i].Location) < 26.0)
+                    {
+                        touching = true;
+                    }
+                }
+
+                if (touching)
+                    MyMood = Mood.Happy;
+                else
+                    MyMood = Mood.Sad;
+            }
         }
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            Vector2 draw_loc = new Vector2(Location.X - (float)(s_BallRed.Width / 2), Location.Y - (float)(s_BallRed.Height / 2));
-            aBatch.Draw(this._TheTexture, draw_loc, Color.White);
+            Vector2 draw_loc = new Vector2(Location.X - (float)(s_MoodTextures[0].Width / 2), Location.Y - (float)(s_MoodTextures[0].Height / 2));
+            aBatch.Draw(s_MoodTextures[(int)MyMood], draw_loc, Color.White);
+
+            if (Held)
+                aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_BallRed = aManager.Load<Texture2D>("sad");
-            s_BallGreen = aManager.Load<Texture2D>("angry");
-            s_BallYellow = aManager.Load<Texture2D>("yellow");
+            s_MoodTextures = new Texture2D[] {
+                aManager.Load<Texture2D>("happy"),
+                aManager.Load<Texture2D>("sad"),
+                aManager.Load<Texture2D>("angry")
+            };
+
+            s_HeldTexture = aManager.Load<Texture2D>("halo");
         }
     }
 }
