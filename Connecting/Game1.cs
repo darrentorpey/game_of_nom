@@ -122,7 +122,7 @@ namespace Connecting
                         {
                             Console.Out.WriteLine("on the dot");
                             inTransitByUser = _Persons[i];
-                            _Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
+                            _Persons[i]._TheTexture = Person.s_BallGreen;
                         }
                     }
                 }
