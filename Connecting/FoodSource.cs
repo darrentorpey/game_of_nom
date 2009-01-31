@@ -67,10 +67,6 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
-            //if (this is FoodSource) {
-            //    Console.WriteLine("hello " + ((FoodSource)this)._BeingEaten);
-            //}
-
             _TicksEaten++;
 
             if (BeingEaten && _TicksEaten%(10*c_decayMultiplier) == 0)

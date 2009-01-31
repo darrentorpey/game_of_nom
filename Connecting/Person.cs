@@ -130,6 +130,11 @@ namespace Connecting
                 EatingObject = null;
             }
 
+            startEatingIfPossible();
+        }
+
+        private void startEatingIfPossible()
+        {
             if (_NearbyFoodSources.Count > 0)
             {
                 _NearbyFoodSources.First().BeingEaten = true;
@@ -219,6 +224,9 @@ namespace Connecting
 
                             if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
                                 _WalkVelocity.Y = -_WalkVelocity.Y;
+
+                            startEatingIfPossible();
+
                             MyMood = getMood();
                             break;
                     }
