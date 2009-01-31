@@ -123,8 +123,8 @@ namespace Connecting
                             //Console.Out.WriteLine("on the dot");
                             this.inTransitByUser = _Persons[i];
                             //_Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
-                            Console.Out.WriteLine("YELLOW");
-                            this.inTransitByUser._TheTexture = Person.s_BallYellow;
+                            Console.Out.WriteLine("Held");
+                            this.inTransitByUser._TheTexture = Person.s_FaceYellow;
                         }
                     }
                 }
@@ -132,7 +132,7 @@ namespace Connecting
 
             if (Mouse.GetState().RightButton == ButtonState.Pressed)
             {
-                Console.Out.WriteLine("bye nurse!");
+                Console.Out.WriteLine("[clear]");
             }
 
             if (this.inTransitByUser != null)
@@ -144,17 +144,17 @@ namespace Connecting
                     if (this.inTransitByUser != _Persons[i] && Vector2.Distance(this.inTransitByUser.Location, _Persons[i].Location) < 26.0) {
                         touching = true;
                     }
+
                     if (touching)
                     {
-                        Console.Out.WriteLine("GREEN");
-                        this.inTransitByUser._TheTexture = Person.s_BallGreen;
+                        Console.Out.WriteLine("Happy");
+                        this.inTransitByUser._TheTexture = Person.s_FaceHappy;
                     }
                     else
                     {
-                        Console.Out.WriteLine("RED");
-                        this.inTransitByUser._TheTexture = Person.s_BallRed;
+                        Console.Out.WriteLine("Held");
+                        this.inTransitByUser._TheTexture = Person.s_FaceYellow;
                     }
-                    
                 }
             }
 
@@ -162,6 +162,8 @@ namespace Connecting
             {
                 if (this.inTransitByUser != null)
                 {
+                    Console.Out.WriteLine("Sad");
+                    this.inTransitByUser._TheTexture = Person.s_FaceSad;
                     this.inTransitByUser = null;
                 }
             }

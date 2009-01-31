@@ -12,9 +12,9 @@ namespace Connecting
     {
         const float c_fSpeed = 3.0f;
 
-        public static Texture2D s_BallRed;
-        public static Texture2D s_BallGreen;
-        public static Texture2D s_BallYellow;
+        public static Texture2D s_FaceSad;
+        public static Texture2D s_FaceHappy;
+        public static Texture2D s_FaceYellow;
 
         public Vector2 Location;
         public Vector2 FlockLocation;
@@ -25,7 +25,7 @@ namespace Connecting
         public Person(Vector2 aStartLocation)
         {
             Location = aStartLocation;
-            this._TheTexture = Person.s_BallRed;
+            this._TheTexture = Person.s_FaceSad;
         }
 
         public void Update(GameTime aTime)
@@ -35,15 +35,15 @@ namespace Connecting
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            Vector2 draw_loc = new Vector2(Location.X - (float)(s_BallRed.Width / 2), Location.Y - (float)(s_BallRed.Height / 2));
+            Vector2 draw_loc = new Vector2(Location.X - (float)(s_FaceSad.Width / 2), Location.Y - (float)(s_FaceSad.Height / 2));
             aBatch.Draw(this._TheTexture, draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_BallRed = aManager.Load<Texture2D>("sad");
-            s_BallGreen = aManager.Load<Texture2D>("angry");
-            s_BallYellow = aManager.Load<Texture2D>("yellow");
+            s_FaceSad = aManager.Load<Texture2D>("sad");
+            s_FaceHappy = aManager.Load<Texture2D>("angry");
+            s_FaceYellow = aManager.Load<Texture2D>("yellow");
         }
     }
 }
