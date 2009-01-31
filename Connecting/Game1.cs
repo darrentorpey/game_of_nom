@@ -119,6 +119,8 @@ namespace Connecting
             else
                 GameObjectManager.Instance.Update(gameTime);
 
+            lastKeyState = keyState;
+
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
