@@ -20,10 +20,13 @@ namespace Connecting
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        GameObject inTransitByUser;
 
         SpriteFont font;
-
-        PersonFlock _Flock = new PersonFlock();
+        MouseState lastMouseState;
+        KeyboardState lastKeyState;
+        PersonFlock _Flock;
+        bool _bSingleStep = false;
 
         public Game1()
         {
@@ -55,20 +58,24 @@ namespace Connecting
 
             Person.LoadContent(Content);
             FoodSource.LoadContent(Content);
+            DrawUtils.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
             Random rand = new Random();
+            
             // Add lots of people around randomly
+            _Flock = new PersonFlock();
+            _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             for (int i = 0; i < 20; ++i)
             {
-                Person newPerson = new Person(
-                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
+                Person newPerson = new Person(_Flock.Location);
                 _Flock.AddPerson(newPerson);
             }
 
             FoodSource theFood = new FoodSource(new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
 
             _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
+
             // Init people here so that we know the content (textures, etc.) are loaded
             GameObjectManager.Instance._Objects = new List<GameObject> {
                 new Person(new Vector2(100, 100)), 
@@ -101,20 +108,30 @@ namespace Connecting
 
             processMouseEvents();
 
-            GameObjectManager.Instance.Update(gameTime);
+            KeyboardState keyState = Keyboard.GetState(PlayerIndex.One);
+            if(lastKeyState == null)
+                lastKeyState = keyState;
+
+            if (_bSingleStep)
+            {
+                if (keyState.IsKeyDown(Keys.OemPlus) && !lastKeyState.IsKeyDown(Keys.OemPlus))
+                    GameObjectManager.Instance.Update(gameTime);
+            }
+            else
+                GameObjectManager.Instance.Update(gameTime);
 
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
 
-        GameObject inTransitByUser;
-
         private void processMouseEvents()
         {
             MouseState state = Mouse.GetState();
+            if (lastMouseState == null)
+                lastMouseState = state;
             Vector2 mouseLoc = new Vector2(state.X, state.Y);
 
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            if (state.LeftButton == ButtonState.Pressed)
             {
                 if (this.inTransitByUser == null)
                 {
@@ -128,6 +145,12 @@ namespace Connecting
                         }
                     }
                 }
+            }
+
+            if (state.RightButton == ButtonState.Pressed && 
+                lastMouseState.RightButton != ButtonState.Pressed)
+            {
+                _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 1500.0f, 3.0f, 120));
             }
 
             if (this.inTransitByUser != null)
@@ -144,6 +167,7 @@ namespace Connecting
                 }
             }
 
+            lastMouseState = state;
         }
 
         /// <summary>
@@ -155,7 +179,6 @@ namespace Connecting
             GraphicsDevice.Clear(Color.White);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
             
             GameObjectManager.Instance.Draw(spriteBatch, gameTime);
             

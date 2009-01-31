@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FoodSource.cs" />
+    <Compile Include="DrawUtils.cs" />
     <Compile Include="GameObject.cs" />
     <Compile Include="GameObjectManager.cs" />
     <Compile Include="Person.cs" />

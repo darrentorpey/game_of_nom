@@ -8,14 +8,42 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Connecting
 {
+    public class ExternalForce
+    {
+        public Vector2 Location;
+        public float fForce;
+        public float fFalloff;
+        public int iLifeLeft;
+
+        public ExternalForce(Vector2 aLocation, float afForce, float afFalloff, int aiLife)
+        {
+            Location = aLocation;
+            fForce = afForce;
+            fFalloff = afFalloff;
+            iLifeLeft = aiLife;
+        }
+    }
+
     public class PersonFlock : GameObject
     {
         private List<Person> _People = new List<Person>();
+        private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
         private float _fCurrentRadius = 0.0f;
+        private Vector2 _CurrentCenterOfMass = Vector2.Zero;
 
         public override float Radius
         {
             get { return _fCurrentRadius; }
+        }
+
+        public Vector2 CurrentCoM
+        {
+            get { return _CurrentCenterOfMass; }
+        }
+
+        public List<Person> People
+        {
+            get { return _People; }
         }
 
         public PersonFlock()
@@ -26,12 +54,12 @@ namespace Connecting
         public void AddPerson(Person aPerson)
         {
             _People.Add(aPerson);
-            aPerson.InFlock = true;
+            aPerson.ParentFlock = this;
         }
 
         public override void Hold()
         {
-            // Nothing to do
+            
         }
 
         public override void Drop()
@@ -48,31 +76,28 @@ namespace Connecting
         {
             _fCurrentRadius = 0.0f;
 
-            Vector2 center = CalculateCenterOfMass();
+            _CurrentCenterOfMass = CalculateCenterOfMass();
             for (int i = 0; i < _People.Count; ++i)
             {
-                Vector2 v0 = (Location - _People[i].Location) / 100.0f;
-                Vector2 v1 = (center - _People[i].Location) / 100.0f;
-                Vector2 v2 = Vector2.Zero;
-                for (int z = 0; z < _People.Count; ++z)
-                { 
-                    if(i == z)
-                        continue;
-                    float dist;
-                    Vector2.Distance(ref _People[i].Location, ref _People[z].Location, out dist);
-                    if (dist < 25.0f)
-                    {
-                        v2 += (_People[i].Location - _People[z].Location);
-                        _People[i].Instability += 1.0f;
-                    }
-                }
-                Vector2 speed = v0 + v1 + v2;
-                speed.Normalize();
-                speed *= 3.0f;
-                _People[i].Location += speed;
-                float fdistCoM = Vector2.Distance(center, _People[i].Location) + _People[i].Radius;
+                float fdistCoM = Vector2.Distance(_CurrentCenterOfMass, _People[i].Location) + _People[i].Radius;
                 _fCurrentRadius = Math.Max(fdistCoM, _fCurrentRadius);
                 _People[i].Update(aTime);
+
+                float fdist;
+                Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
+                if (fdist > 15.0f * _People.Count)
+                {
+                    _People[i].ParentFlock = null;
+                    GameObjectManager.Instance._Objects.Add(_People[i]);
+                    _People.RemoveAt(i);
+                }
+            }
+
+            for (int i = 0; i < _ExternalForces.Count; ++i)
+            {
+                _ExternalForces[i].iLifeLeft -= aTime.ElapsedGameTime.Milliseconds;
+                if (_ExternalForces[i].iLifeLeft <= 0)
+                    _ExternalForces.RemoveAt(i);
             }
         }
 
@@ -80,9 +105,34 @@ namespace Connecting
         {
             for(int i = 0; i < _People.Count; ++i)
                 _People[i].Draw(aBatch, aTime);
+
+            DrawUtils.DrawPoint(aBatch, Location, 5, Color.Tomato);
         }
 
-        public Vector2 CalculateCenterOfMass()
+        public void AddExtenralForce(ExternalForce aForce)
+        {
+            _ExternalForces.Add(aForce);
+        }
+
+        public Vector2 GetExternalForces(Person aPerson)
+        {
+            Vector2 force = Vector2.Zero;
+            for (int i = 0; i < _ExternalForces.Count; ++i)
+            {
+                float fdist = Vector2.Distance(aPerson.Location, _ExternalForces[i].Location);
+                Vector2 direction = aPerson.Location - _ExternalForces[i].Location;
+                direction.Normalize();
+
+                float ffactor = _ExternalForces[i].fForce - (fdist * _ExternalForces[i].fFalloff);
+                Console.WriteLine(ffactor);
+                if(ffactor > 0)
+                    force += direction * ffactor;
+            }
+
+            return force;
+        }
+
+        private Vector2 CalculateCenterOfMass()
         {
             Vector2 runningTotal = Vector2.Zero;
             for (int i = 0; i < _People.Count; ++i)

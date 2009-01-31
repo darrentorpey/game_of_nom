@@ -156,6 +156,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Pixel.bmp">
+      <Name>Pixel</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="food\food_grapes_0.png">
       <Name>food_grapes_0</Name>
       <Importer>TextureImporter</Importer>
