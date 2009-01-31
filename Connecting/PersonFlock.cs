@@ -41,13 +41,14 @@ namespace Connecting
                     if (dist < 25.0f)
                     {
                         v2 += (_People[i].Location - _People[z].Location);
+                        _People[i].Instability += 1.0f;
                     }
-
                 }
                 Vector2 speed = v0 + v1 + v2;
                 speed.Normalize();
                 speed *= 3.0f;
                 _People[i].Location += speed;
+                _People[i].Update(aTime);
             }
         }
 

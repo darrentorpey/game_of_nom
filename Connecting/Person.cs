@@ -18,19 +18,26 @@ namespace Connecting
 
         public Vector2 Location;
         public Vector2 FlockLocation;
+        public float Instability = 0.0f;
 
         public Texture2D _TheTexture;
-
+        
 
         public Person(Vector2 aStartLocation)
         {
             Location = aStartLocation;
-            this._TheTexture = Person.s_BallRed;
+            this._TheTexture = Person.s_BallYellow;
         }
 
         public void Update(GameTime aTime)
         {
-            
+            if (Instability < 20.0f)
+                _TheTexture = s_BallYellow;
+            else if (Instability < 50.0f)
+                _TheTexture = s_BallRed;
+            else
+                _TheTexture = s_BallGreen;
+
         }
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
