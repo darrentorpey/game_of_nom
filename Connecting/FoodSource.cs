@@ -12,7 +12,7 @@ namespace Connecting
     {
 
         const float c_decayMultiplier = 5.0f;
-        int _TicksPassed = 0;
+        int _TicksEaten = 0;
         public bool Dead = false;
 
         private static Texture2D[] s_FoodTextures;
@@ -53,9 +53,9 @@ namespace Connecting
             //    Console.WriteLine("hello " + ((FoodSource)this)._BeingEaten);
             //}
 
-            _TicksPassed++;
+            _TicksEaten++;
 
-            if (_TicksPassed%(10*c_decayMultiplier) == 0)
+            if (BeingEaten && _TicksEaten%(10*c_decayMultiplier) == 0)
             {
                 if (_AmountLeft == 1)
                 {
