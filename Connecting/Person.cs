@@ -150,7 +150,6 @@ namespace Connecting
 
             if (_eMyState == State.Eating && EatingObject.Dead)
             {
-                Console.WriteLine("done");
                 EatingObject = null;
                 _eMyState = State.Alone;
                 _eMyAloneState = AloneState.StandingStill;
@@ -267,7 +266,8 @@ namespace Connecting
 
             if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
                 // If we're colliding with a person, we're happy (we're very social!)
-                return Mood.Happy;
+                        //if (_eMyState == State.Alone
+                return Mood.Excited;
             }
             else if (_NearbyFoodSources.Count != 0)
             {
