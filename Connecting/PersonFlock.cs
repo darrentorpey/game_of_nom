@@ -67,11 +67,6 @@ namespace Connecting
             
         }
 
-        public override void MoveTo(ref Vector2 aLocation)
-        {
-            Location = aLocation;
-        }
-
         public override void Update(GameTime aTime)
         {
             _fCurrentRadius = 0.0f;
