@@ -160,6 +160,8 @@ namespace Connecting
             spriteBatch.Begin();
             spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
             _Flock.Draw(spriteBatch, gameTime);
+            for (int i = 0; i < _Persons.Length; ++i)
+                _Persons[i].Draw(spriteBatch, gameTime);
 
             spriteBatch.End();
 
