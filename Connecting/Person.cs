@@ -121,6 +121,7 @@ namespace Connecting
                 {
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+                    MyMood = Mood.Sad;
                 }
             }
         }
@@ -169,7 +170,7 @@ namespace Connecting
             }
 
             // Always involve friction
-            //forces += (-_Velocity) * .35f;
+            forces += (-_Velocity) * .35f;
 
             // Assume 1.0 mass, force is acceleration
             _Velocity += forces;

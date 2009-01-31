@@ -22,11 +22,6 @@ namespace Connecting
             fFalloff = afFalloff;
             iLifeLeft = aiLife;
         }
-
-        public void Tick(int aiTick)
-        {
-            iLifeLeft -= aiTick;
-        }
     }
 
     public class PersonFlock : GameObject
@@ -35,8 +30,6 @@ namespace Connecting
         private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
         private float _fCurrentRadius = 0.0f;
         private Vector2 _CurrentCenterOfMass = Vector2.Zero;
-
-        private bool _bHeld = false;
 
         public override float Radius
         {
@@ -89,11 +82,20 @@ namespace Connecting
                 float fdistCoM = Vector2.Distance(_CurrentCenterOfMass, _People[i].Location) + _People[i].Radius;
                 _fCurrentRadius = Math.Max(fdistCoM, _fCurrentRadius);
                 _People[i].Update(aTime);
+
+                float fdist;
+                Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
+                if (fdist > 15.0f * _People.Count)
+                {
+                    _People[i].ParentFlock = null;
+                    GameObjectManager.Instance._Objects.Add(_People[i]);
+                    _People.RemoveAt(i);
+                }
             }
 
             for (int i = 0; i < _ExternalForces.Count; ++i)
             {
-                _ExternalForces[i].Tick(aTime.ElapsedGameTime.Milliseconds);
+                _ExternalForces[i].iLifeLeft -= aTime.ElapsedGameTime.Milliseconds;
                 if (_ExternalForces[i].iLifeLeft <= 0)
                     _ExternalForces.RemoveAt(i);
             }
