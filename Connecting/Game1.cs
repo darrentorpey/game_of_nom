@@ -82,9 +82,29 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
+            processMouseEvents();
+
             // TODO: Add your update logic here
 
             base.Update(gameTime);
+        }
+
+        private void processMouseEvents()
+        {
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            {
+                Console.Out.WriteLine("helloooooo nurse!");
+                for (int i = 0; i < _Persons.Length; ++i)
+                {
+                    //_Persons[i]
+                    Console.Out.WriteLine("on the dot");
+                }
+            }
+
+            if (Mouse.GetState().RightButton == ButtonState.Pressed)
+            {
+                Console.Out.WriteLine("bye nurse!");
+            }
         }
 
         /// <summary>

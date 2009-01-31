@@ -26,7 +26,8 @@ namespace Connecting
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            aBatch.Draw(s_Texture, _Location, Color.White);
+            Vector2 draw_loc = new Vector2(_Location.X - (float)(s_Texture.Width/2), _Location.Y - (float)(s_Texture.Height/2));
+            aBatch.Draw(s_Texture, draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
