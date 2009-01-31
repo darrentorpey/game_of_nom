@@ -42,20 +42,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="personsprite.JPG">
-      <Name>personsprite</Name>
+    <Compile Include="angry.png">
+      <Name>angry</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
-    <Compile Include="personsprite2.png">
-      <Name>personsprite2</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="personsprite3.png">
-      <Name>personsprite3</Name>
+    <Compile Include="sad.png">
+      <Name>sad</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>

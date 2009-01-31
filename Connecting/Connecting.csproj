@@ -84,6 +84,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameObjects\GameObject.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="PersonFlock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -41,12 +41,9 @@ namespace Connecting
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_BallRed = aManager.Load<Texture2D>("PersonSprite");
-            s_BallGreen = aManager.Load<Texture2D>("PersonSprite2");
-            s_BallYellow = aManager.Load<Texture2D>("PersonSprite3");
-
-            // Set the default texture
-            //this._TheTexture = s_BallRed;
+            s_BallRed = aManager.Load<Texture2D>("sad");
+            s_BallGreen = aManager.Load<Texture2D>("angry");
+            s_BallYellow = aManager.Load<Texture2D>("yellow");
         }
     }
 }
