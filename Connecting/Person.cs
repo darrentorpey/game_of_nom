@@ -12,14 +12,19 @@ namespace Connecting
     {
         const float c_fSpeed = 3.0f;
 
-        static Texture2D s_Texture;
+        public static Texture2D s_BallRed;
+        public static Texture2D s_BallGreen;
 
         public Vector2 Location;
         public Vector2 FlockLocation;
 
+        public Texture2D _TheTexture;
+
+
         public Person(Vector2 aStartLocation)
         {
             Location = aStartLocation;
+            this._TheTexture = Person.s_BallRed;
         }
 
         public void Update(GameTime aTime)
@@ -29,12 +34,17 @@ namespace Connecting
 
         public void Draw(SpriteBatch aBatch, GameTime aTime)
         {
-            aBatch.Draw(s_Texture, Location, Color.White);
+            Vector2 draw_loc = new Vector2(Location.X - (float)(s_BallRed.Width / 2), Location.Y - (float)(s_BallRed.Height / 2));
+            aBatch.Draw(this._TheTexture, draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_Texture = aManager.Load<Texture2D>("PersonSprite");
+            s_BallRed = aManager.Load<Texture2D>("PersonSprite");
+            s_BallGreen = aManager.Load<Texture2D>("PersonSprite2");
+
+            // Set the default texture
+            //this._TheTexture = s_BallRed;
         }
     }
 }
