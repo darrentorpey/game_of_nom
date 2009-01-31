@@ -30,6 +30,21 @@ namespace Connecting
             Count = 7
         }
 
+        public enum State
+        {
+            Alone,
+            Flocking,
+            Held
+        }
+
+        public enum AloneState
+        {
+            StandingStill,
+            Looking,
+            Wandering,
+            Eating
+        }
+
         public enum LookDirection
         {
             Left,
@@ -46,7 +61,9 @@ namespace Connecting
         private Mood? MyHoverMood = null;
         private LookDirection MyLook = LookDirection.Left;
         
-        private bool _bHeld = false;
+        private State _eMyState = State.Alone;
+        private AloneState _eMyAloneState = AloneState.StandingStill;
+        
         private GameObject _CollidingObject = null;
         private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private Vector2 _Velocity;
@@ -58,7 +75,6 @@ namespace Connecting
 
         private Vector2[] _Forces = new Vector2[5];      
 
-        public float Instability { get; set; }
         public PersonFlock ParentFlock { get; set; }
         public Vector2 Velocity { get { return _Velocity; } }
         public override float Radius { get { return 13.0f; } }
@@ -74,11 +90,13 @@ namespace Connecting
 
         public override void Hold()
         {
-            _bHeld = true;
+            _eMyState = State.Held;
         }
 
         public override void Drop()
         {
+            _eMyState = State.Alone;
+
             if (_CollidingObject != null)
             {
                 GameObjectManager manager = GameObjectManager.Instance;
@@ -86,6 +104,7 @@ namespace Connecting
                 {
                     manager._Objects.Remove(this);
                     ((PersonFlock)_CollidingObject).AddPerson(this);
+                    _eMyState = State.Flocking;
                 }
                 else if (_CollidingObject is Person)
                 {
@@ -96,6 +115,7 @@ namespace Connecting
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
                     manager._Objects.Add(flock);
+                    _eMyState = State.Flocking;
                 }
 
                 _CollidingObject = null;
@@ -115,61 +135,27 @@ namespace Connecting
                 _NearbyFoodSources.First().BeingEaten = true;
                 EatingObject = _NearbyFoodSources.First();
             }
-
-            _bHeld = false;
         }
 
         public override void Update(GameTime aTime)
         {
-
             if (ParentFlock != null)
-            {
-                AccumulateForces();
-                Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+                _eMyState = State.Flocking;
 
-                if (Instability < 20.0f)
+            switch(_eMyState)
+            {
+                case State.Flocking:
                     MyMood = Mood.Happy;
-                else if (Instability < 50.0f)
-                    MyMood = Mood.Sad;
-                else
-                    MyMood = Mood.Angry;
-            }
-            else
-            {    
-                if (_bHeld)
-                {
-                    alterMyMood(false);
-                }
-                else
-                {
+                    AccumulateForces();
+                    Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+                    break;
+
+                case State.Alone:
                     AccumulateForces();
                     if (_iNextThink <= 0)
                     {
                         _iNextThink = c_iThinkTime + RandomInstance.Instance.Next(-c_iRandDelay, c_iRandDelay);
-                        switch (RandomInstance.Instance.Next(0, 3))
-                        {
-                            case 0: // Stay Still
-                                _bLooking = false;
-                                _WalkVelocity = Vector2.Zero;
-                                break;
-                            case 1: // Wander in a random direction
-                                _bLooking = false;
-                                _WalkVelocity = new Vector2(RandomInstance.Instance.Next(-100, 100) / 100.0f,
-                                    RandomInstance.Instance.Next(-100, 100) / 100.0f);
-                                _WalkVelocity.Normalize();
-                                if (_WalkVelocity.X < 0)
-                                    MyLook = LookDirection.Left;
-                                else
-                                    MyLook = LookDirection.Right;
-
-                                _WalkVelocity *= c_fSpeed;
-                                break;
-                            case 2:  // Look around?
-                                _bLooking = true;
-                                _iNextLook = c_iLookTime + RandomInstance.Instance.Next(-c_iLookDelay, c_iLookDelay);
-                                _WalkVelocity = Vector2.Zero;
-                                break;
-                        }
+                        _eMyAloneState = (AloneState)RandomInstance.Instance.Next(0, 3);
 
                         switch (RandomInstance.Instance.Next(0, 2))
                         {
@@ -180,29 +166,51 @@ namespace Connecting
                     else
                         _iNextThink -= aTime.ElapsedGameTime.Milliseconds;
 
-                    if (_bLooking)
+                    switch (_eMyAloneState)
                     {
-                        if (_iNextLook <= 0)
-                        {
-                            _iNextLook = c_iLookTime + RandomInstance.Instance.Next(-c_iLookDelay, c_iLookDelay);
-                            MyLook = MyLook == LookDirection.Left ? LookDirection.Right : LookDirection.Left;
-                        }
-                        else
-                            _iNextLook -= aTime.ElapsedGameTime.Milliseconds;
+                        case AloneState.StandingStill:
+                            _WalkVelocity = Vector2.Zero;
+                            break;
+                        case AloneState.Looking:
+                            if (_iNextLook <= 0)
+                            {
+                                _iNextLook = c_iLookTime + RandomInstance.Instance.Next(-c_iLookDelay, c_iLookDelay);
+                                MyLook = MyLook == LookDirection.Left ? LookDirection.Right : LookDirection.Left;
+                            }
+                            else
+                                _iNextLook -= aTime.ElapsedGameTime.Milliseconds;
+                            _WalkVelocity = Vector2.Zero;
+                            break;
+                        case AloneState.Wandering:
+                            if (_WalkVelocity == Vector2.Zero)
+                            {
+                                _WalkVelocity = new Vector2(RandomInstance.Instance.Next(-100, 100) / 100.0f,
+                                    RandomInstance.Instance.Next(-100, 100) / 100.0f);
+                                _WalkVelocity.Normalize();
+                                if (_WalkVelocity.X < 0)
+                                    MyLook = LookDirection.Left;
+                                else
+                                    MyLook = LookDirection.Right;
+
+                                _WalkVelocity *= c_fSpeed;
+                            }
+                            _Velocity += _WalkVelocity;
+                            Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+
+                            if (Location.X < _Bounds.X || Location.X > _Bounds.X + _Bounds.Width)
+                            {
+                                _WalkVelocity.X = -_WalkVelocity.X;
+                                MyLook = MyLook == LookDirection.Left ? LookDirection.Right : LookDirection.Left;
+                            }
+
+                            if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
+                                _WalkVelocity.Y = -_WalkVelocity.Y;
+                            break;
                     }
-
-                    _Velocity += _WalkVelocity;
-                    Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
-
-                    if (Location.X < _Bounds.X || Location.X > _Bounds.X + _Bounds.Width)
-                    {
-                        _WalkVelocity.X = -_WalkVelocity.X;
-                        MyLook = MyLook == LookDirection.Left ? LookDirection.Right : LookDirection.Left;
-                    }
-
-                    if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
-                        _WalkVelocity.Y = -_WalkVelocity.Y;
-                }
+                    break;
+                case State.Held:
+                    alterMyMood(false);
+                    break;
             }
         }
 
@@ -231,14 +239,10 @@ namespace Connecting
                     {
                         _NearbyFoodSources.Push((FoodSource)currObj);
                     }
-                    else
-                    {
-                        Console.WriteLine("Here: " + currObj.InProximity(this, FOOD_PROXIMITY) + ", " + (this.EatingObject == currObj));
-                    }
                 }
             }
 
-            if (_CollidingObject != null && _CollidingObject is Person) {
+            if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
                 // If we're colliding with a person, we're happy (we're very social!)
                 if (realMood){
                     MyMood = Mood.Happy;
@@ -359,7 +363,7 @@ namespace Connecting
             aBatch.Draw(mood_texture, draw_loc, null, Color.White, 0.0f, Vector2.Zero, 1.0f, 
                 MyLook == LookDirection.Right ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0.0f);
 
-            if (_bHeld)
+            if (_eMyState == State.Held)
                 aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
 
             //for (int i = 0; i < 5; ++i)
