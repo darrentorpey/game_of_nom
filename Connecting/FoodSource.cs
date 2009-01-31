@@ -10,7 +10,6 @@ namespace Connecting
 {
     public class FoodSource : GameObject
     {
-
         const int c_decayTime = 1500;
 
         int _iEatDelay = 0;

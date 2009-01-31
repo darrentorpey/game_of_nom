@@ -143,6 +143,11 @@ namespace Connecting
                 EatingObject = null;
             }
 
+            startEatingIfPossible();
+        }
+
+        private void startEatingIfPossible()
+        {
             if (_NearbyFoodSources.Count > 0)
             {
                 _NearbyFoodSources.First().BeingEaten = true;
@@ -158,7 +163,6 @@ namespace Connecting
 
             if (_eMyState == State.Eating && EatingObject.Dead)
             {
-                Console.WriteLine("done");
                 EatingObject = null;
                 _eMyState = State.Alone;
                 _eMyAloneState = AloneState.StandingStill;
@@ -278,6 +282,9 @@ namespace Connecting
 
                             if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
                                 _WalkVelocity.Y = -_WalkVelocity.Y;
+
+                            startEatingIfPossible();
+
                             MyMood = getMood();
                             break;
                     }
@@ -318,7 +325,8 @@ namespace Connecting
 
             if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
                 // If we're colliding with a person, we're happy (we're very social!)
-                return Mood.Happy;
+                        //if (_eMyState == State.Alone
+                return Mood.Excited;
             }
             else if (_NearbyFoodSources.Count != 0)
             {

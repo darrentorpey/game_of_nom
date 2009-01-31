@@ -22,6 +22,8 @@ namespace Connecting
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
 
+        float _fFruitSpawnRate = 5.0f;
+
         SpriteFont font;
         MouseState lastMouseState;
         KeyboardState lastKeyState;
@@ -83,26 +85,26 @@ namespace Connecting
                 _Flock
             };
 
-            for (int i = 0; i < 5; ++i) {
-                GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(100), bounds));
+            for (int i = 0; i < 10; ++i) {
+                GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(50), bounds));
             }
 
             for (int i = 0; i < 5; ++i)
             {
-                GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(100), FoodSource.Fruit.Grapes));
+                spawnFruit(FoodSource.Fruit.Grapes);
             }
 
             for (int i = 0; i < 5; ++i)
             {
-                GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(100), FoodSource.Fruit.Orange));
+                spawnFruit(FoodSource.Fruit.Orange);
             }
         }
 
         private Vector2 getRandomLocation(int borderPadding)
         {
             return new Vector2(
-                RandomInstance.Instance.Next(0, Window.ClientBounds.Width - borderPadding),
-                RandomInstance.Instance.Next(0, Window.ClientBounds.Height - borderPadding));
+                RandomInstance.Instance.Next(borderPadding, Window.ClientBounds.Width - borderPadding),
+                RandomInstance.Instance.Next(borderPadding, Window.ClientBounds.Height - borderPadding));
         }
 
         /// <summary>
@@ -128,9 +130,71 @@ namespace Connecting
 
             processMouseEvents();
 
+            processKeyboardEvents(gameTime);
+
+            spawnMoreFood();
+
+            // TODO: Add your update logic here
+            base.Update(gameTime);
+        }
+
+        private int ticksTillFruitSpawn;
+
+        private void spawnMoreFood()
+        {
+            if (0 == ticksTillFruitSpawn)
+            {
+                spawnRandomFruit();
+                ticksTillFruitSpawn = (int)(10 * _fFruitSpawnRate);
+            }
+            else
+            {
+                ticksTillFruitSpawn--;
+            }
+        }
+
+        private void spawnRandomFruit()
+        {
+            spawnFruit((FoodSource.Fruit)(RandomInstance.Instance.Next(0, (int)FoodSource.Fruit.Count)));
+        }
+
+        private void spawnFruit(FoodSource.Fruit fruitType)
+        {
+
+            GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(50), fruitType));
+        }
+
+        private void spawnPerson()
+        {
+            Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+            GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(50), bounds));
+        }
+
+        private void processKeyboardEvents(GameTime gameTime)
+        {
             KeyboardState keyState = Keyboard.GetState(PlayerIndex.One);
-            if(lastKeyState == null)
+            if (lastKeyState == null)
                 lastKeyState = keyState;
+
+            if (keyState.IsKeyDown(Keys.R) && !lastKeyState.IsKeyDown(Keys.R))
+            {
+                Restart();
+            }
+            if (keyState.IsKeyDown(Keys.S) && !lastKeyState.IsKeyDown(Keys.S))
+            {
+                if (keyState.IsKeyDown(Keys.D1))
+                {
+                    spawnFruit(FoodSource.Fruit.Grapes);
+                }
+                else if (keyState.IsKeyDown(Keys.D2))
+                {
+                    spawnFruit(FoodSource.Fruit.Orange);
+                }
+                else
+                {
+                    spawnRandomFruit();
+                }
+            }
 
             if (_bSingleStep)
             {
@@ -141,14 +205,12 @@ namespace Connecting
                 GameObjectManager.Instance.Update(gameTime);
 
             lastKeyState = keyState;
-
-            // TODO: Add your update logic here
-            base.Update(gameTime);
         }
 
         private void processMouseEvents()
         {
             MouseState state = Mouse.GetState();
+
             if (lastMouseState == null)
                 lastMouseState = state;
             Vector2 mouseLoc = new Vector2(state.X, state.Y);
@@ -207,6 +269,12 @@ namespace Connecting
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        public void Restart()
+        {
+            GameObjectManager.Instance._Objects.Clear();
+            spawnStartingObjects();
         }
     }
 }
