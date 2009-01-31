@@ -8,13 +8,11 @@ namespace Connecting.GameObjects
 {
     public class GameObject
     {
-        public Vector2 Location;
+        public Rectangle Bounds;
 
         public GameObject()
         {
 
         }
-
-        
     }
 }
