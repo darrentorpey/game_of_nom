@@ -41,15 +41,6 @@ namespace Connecting
         /// </summary>
         protected override void Initialize()
         {
-            Random rand = new Random();
-            // Add lots of people around randomly
-            for(int i = 0; i < 20; ++i)
-            {
-                _Flock.AddPerson(new Person(
-                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height))
-                ));
-            }
-
             base.Initialize();
         }
 
@@ -63,7 +54,18 @@ namespace Connecting
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Person.LoadContent(Content);
-            font = Content.Load<SpriteFont>("Helvetica");            
+            font = Content.Load<SpriteFont>("Helvetica");
+
+            Random rand = new Random();
+            // Add lots of people around randomly
+            for (int i = 0; i < 20; ++i)
+            {
+                _Flock.AddPerson(new Person(
+                    new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height))
+                ));
+            }
+
+            _Flock.TargetLocation = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
         }
 
         /// <summary>
