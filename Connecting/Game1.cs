@@ -62,15 +62,15 @@ namespace Connecting
             {
                 Person newPerson = new Person(
                     new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
-                newPerson.InFlock = true;
                 _Flock.AddPerson(newPerson);
             }
 
-            _Flock.TargetLocation = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
+            _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             // Init people here so that we know the content (textures, etc.) are loaded
-            GameObjectManager.Instance._Persons = new Person[] {
+            GameObjectManager.Instance._Objects = new List<GameObject> {
                 new Person(new Vector2(100, 100)), 
-                new Person(new Vector2(200, 200))
+                new Person(new Vector2(200, 200)),
+                _Flock
             };
         }
 
@@ -95,62 +95,47 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            _Flock.Update(gameTime);
             processMouseEvents();
 
-            GameObjectManager manager = GameObjectManager.Instance;
-            for (int i = 0; i < manager._Persons.Length; ++i)
-                manager._Persons[i].Update(gameTime);
+            GameObjectManager.Instance.Update(gameTime);
 
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
 
-        Person inTransitByUser;
+        GameObject inTransitByUser;
 
         private void processMouseEvents()
         {
-            int mouseX = Mouse.GetState().X;
-            int mouseY = Mouse.GetState().Y;
+            MouseState state = Mouse.GetState();
+            Vector2 mouseLoc = new Vector2(state.X, state.Y);
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
                 if (this.inTransitByUser == null)
                 {
                     GameObjectManager manager = GameObjectManager.Instance;
-                    //Console.Out.WriteLine("helloooooo nurse!");
-                    for (int i = 0; i < manager._Persons.Length; ++i)
+                    for (int i = 0; i < manager._Objects.Count; ++i)
                     {
-                        float dist = Vector2.Distance(manager._Persons[i].Location, new Vector2(mouseX, mouseY));
-                        //Console.Out.WriteLine("dist: " + dist);
-                        if (dist < 13.0)
+                        if(manager._Objects[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                            //Console.Out.WriteLine("on the dot");
-                            this.inTransitByUser = manager._Persons[i];
-                            //_Persons[i]._TheTexture = Content.Load<Texture2D>("PersonSprite2");
-                            Console.Out.WriteLine("Held");
-                            manager._Persons[i].Held = true;
+                           this.inTransitByUser = manager._Objects[i];
+                           manager._Objects[i].Hold();
                         }
                     }
                 }
             }
 
-            if (Mouse.GetState().RightButton == ButtonState.Pressed)
-            {
-                Console.Out.WriteLine("[clear]");
-            }
-
             if (this.inTransitByUser != null)
             {
-                this.inTransitByUser.Location = new Vector2(mouseX, mouseY);
+                this.inTransitByUser.Location = mouseLoc;
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Released)
             {
                 if (this.inTransitByUser != null)
                 {
-                    Console.Out.WriteLine("Sad");
-                    inTransitByUser.Held = false;
+                    inTransitByUser.Drop();
                     this.inTransitByUser = null;
                 }
             }
@@ -167,11 +152,9 @@ namespace Connecting
 
             spriteBatch.Begin();
             spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
-            _Flock.Draw(spriteBatch, gameTime);
-            GameObjectManager manager = GameObjectManager.Instance;
-            for (int i = 0; i < manager._Persons.Length; ++i)
-                manager._Persons[i].Draw(spriteBatch, gameTime);
-
+            
+            GameObjectManager.Instance.Draw(spriteBatch, gameTime);
+            
             spriteBatch.End();
 
             base.Draw(gameTime);
