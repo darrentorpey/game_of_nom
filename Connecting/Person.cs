@@ -26,9 +26,9 @@ namespace Connecting
         private Mood MyMood = Mood.Sad;
         private bool _bHeld = false;
         private GameObject _CollidingObject = null;
+        private Vector2 _Velocity;
 
-        public bool InFlock = false;
-
+        public PersonFlock ParentFlock { get; set; }
         public override float Radius { get { return 13.0f; } }
 
         public Person(Vector2 aStartLocation)
@@ -75,8 +75,11 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
-            if (InFlock)
+            if (ParentFlock != null)
             {
+                AccumulateForces();
+                Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+
                 if (Instability < 20.0f)
                     MyMood = Mood.Happy;
                 else if (Instability < 50.0f)
@@ -84,22 +87,76 @@ namespace Connecting
                 else
                     MyMood = Mood.Angry;
             }
-
-            if (_bHeld)
+            else
             {
-                GameObjectManager manager = GameObjectManager.Instance;
-                _CollidingObject = null;
-                for (int i = 0; i < manager._Objects.Count; ++i)
+                if (_bHeld)
                 {
-                    if (this != manager._Objects[i] && manager._Objects[i].CollidesWith(this))
-                        _CollidingObject = manager._Objects[i];
-                }
+                    GameObjectManager manager = GameObjectManager.Instance;
+                    _CollidingObject = null;
+                    for (int i = 0; i < manager._Objects.Count; ++i)
+                    {
+                        if (this != manager._Objects[i] && manager._Objects[i].CollidesWith(this))
+                            _CollidingObject = manager._Objects[i];
+                    }
 
-                if (_CollidingObject != null)
-                    MyMood = Mood.Happy;
+                    if (_CollidingObject != null)
+                        MyMood = Mood.Happy;
+                    else
+                        MyMood = Mood.Sad;
+                }
                 else
-                    MyMood = Mood.Sad;
+                {
+                    AccumulateForces();
+                    Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
+                }
             }
+        }
+
+        public void AccumulateForces()
+        {
+            _Velocity = Vector2.Zero;
+
+            Vector2 forces = Vector2.Zero;
+            if (ParentFlock != null)
+            {
+                // Always move toward CoM.  Pull harder if farther away.
+                forces += GetForceToward(ParentFlock.CurrentCoM, .51f);
+                
+                // Always move toward Target location
+                forces += GetForceToward(ParentFlock.Location, .51f);
+
+                // Move away from all other boids
+                Vector2 avoidanceForce = Vector2.Zero;
+                for (int i = 0; i < ParentFlock.People.Count; ++i)
+                {
+                    if (ParentFlock.People[i] == this)
+                        continue;
+
+                    float dist;
+                    Vector2.Distance(ref ParentFlock.People[i].Location, ref this.Location, out dist);
+                    if (dist < 40.0f)
+                    {
+                        Vector2 force = (this.Location - ParentFlock.People[i].Location);
+                        avoidanceForce += force;
+                        Instability += 1.0f;
+                    }
+                }
+                forces += avoidanceForce;
+            }
+
+            // Always involve friction
+            forces += (-_Velocity) * .5f;
+
+            // Assume 1.0 mass, force is acceleration
+            _Velocity += forces;
+        }
+
+        private Vector2 GetForceToward(Vector2 aPoint, float afDampening)
+        {
+            float fcomDist = (Vector2.Distance(Location, ParentFlock.CurrentCoM) * afDampening);
+            Vector2 force = (aPoint - Location);
+
+            return force * afDampening;
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)

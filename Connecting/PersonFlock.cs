@@ -12,10 +12,23 @@ namespace Connecting
     {
         private List<Person> _People = new List<Person>();
         private float _fCurrentRadius = 0.0f;
+        private Vector2 _CurrentCenterOfMass = Vector2.Zero;
+
+        private bool _bHeld = false;
 
         public override float Radius
         {
             get { return _fCurrentRadius; }
+        }
+
+        public Vector2 CurrentCoM
+        {
+            get { return _CurrentCenterOfMass; }
+        }
+
+        public List<Person> People
+        {
+            get { return _People; }
         }
 
         public PersonFlock()
@@ -26,12 +39,12 @@ namespace Connecting
         public void AddPerson(Person aPerson)
         {
             _People.Add(aPerson);
-            aPerson.InFlock = true;
+            aPerson.ParentFlock = this;
         }
 
         public override void Hold()
         {
-            // Nothing to do
+            
         }
 
         public override void Drop()
@@ -48,29 +61,10 @@ namespace Connecting
         {
             _fCurrentRadius = 0.0f;
 
-            Vector2 center = CalculateCenterOfMass();
+            _CurrentCenterOfMass = CalculateCenterOfMass();
             for (int i = 0; i < _People.Count; ++i)
             {
-                Vector2 v0 = (Location - _People[i].Location) / 100.0f;
-                Vector2 v1 = (center - _People[i].Location) / 100.0f;
-                Vector2 v2 = Vector2.Zero;
-                for (int z = 0; z < _People.Count; ++z)
-                { 
-                    if(i == z)
-                        continue;
-                    float dist;
-                    Vector2.Distance(ref _People[i].Location, ref _People[z].Location, out dist);
-                    if (dist < 25.0f)
-                    {
-                        v2 += (_People[i].Location - _People[z].Location);
-                        _People[i].Instability += 1.0f;
-                    }
-                }
-                Vector2 speed = v0 + v1 + v2;
-                speed.Normalize();
-                speed *= 3.0f;
-                _People[i].Location += speed;
-                float fdistCoM = Vector2.Distance(center, _People[i].Location) + _People[i].Radius;
+                float fdistCoM = Vector2.Distance(_CurrentCenterOfMass, _People[i].Location) + _People[i].Radius;
                 _fCurrentRadius = Math.Max(fdistCoM, _fCurrentRadius);
                 _People[i].Update(aTime);
             }
@@ -80,9 +74,11 @@ namespace Connecting
         {
             for(int i = 0; i < _People.Count; ++i)
                 _People[i].Draw(aBatch, aTime);
+
+            DrawUtils.DrawPoint(aBatch, Location, 5, Color.Tomato);
         }
 
-        public Vector2 CalculateCenterOfMass()
+        private Vector2 CalculateCenterOfMass()
         {
             Vector2 runningTotal = Vector2.Zero;
             for (int i = 0; i < _People.Count; ++i)

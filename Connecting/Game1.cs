@@ -20,10 +20,10 @@ namespace Connecting
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        GameObject inTransitByUser;
 
         SpriteFont font;
-
-        PersonFlock _Flock = new PersonFlock();
+        Texture2D _Yellow;
 
         public Game1()
         {
@@ -54,23 +54,27 @@ namespace Connecting
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Person.LoadContent(Content);
+            DrawUtils.LoadContent(Content);
+            _Yellow = Content.Load<Texture2D>("Yellow");
             font = Content.Load<SpriteFont>("Helvetica");
 
             Random rand = new Random();
+            
             // Add lots of people around randomly
+            PersonFlock flock = new PersonFlock();
             for (int i = 0; i < 20; ++i)
             {
                 Person newPerson = new Person(
                     new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height)));
-                _Flock.AddPerson(newPerson);
+                flock.AddPerson(newPerson);
             }
 
-            _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
+            flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
             // Init people here so that we know the content (textures, etc.) are loaded
             GameObjectManager.Instance._Objects = new List<GameObject> {
                 new Person(new Vector2(100, 100)), 
                 new Person(new Vector2(200, 200)),
-                _Flock
+                flock
             };
         }
 
@@ -102,8 +106,6 @@ namespace Connecting
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
-
-        GameObject inTransitByUser;
 
         private void processMouseEvents()
         {
@@ -151,7 +153,6 @@ namespace Connecting
             GraphicsDevice.Clear(Color.White);
 
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, _Flock.CalculateCenterOfMass().ToString(), Vector2.Zero, Color.Black); 
             
             GameObjectManager.Instance.Draw(spriteBatch, gameTime);
             
