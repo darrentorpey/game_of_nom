@@ -22,24 +22,27 @@ namespace Connecting
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
 
-        public float Instability = 0.0f;
+        
         private Mood MyMood = Mood.Sad;
         private bool _bHeld = false;
         private GameObject _CollidingObject = null;
         private Vector2 _Velocity;
+        private Rectangle _Bounds;
 
         private Vector2[] _Forces = new Vector2[5];
         private Color[] _ForceColors = new Color[] {
             Color.Red, Color.Black, Color.Green, Color.Blue, Color.Pink
         };
 
+        public float Instability { get; set; }
         public PersonFlock ParentFlock { get; set; }
-        public override float Radius { get { return 13.0f; } }
         public Vector2 Velocity { get { return _Velocity; } }
-
-        public Person(Vector2 aStartLocation)
+        public override float Radius { get { return 13.0f; } }
+        
+        public Person(Vector2 aStartLocation, Rectangle aBounds)
         {
             Location = aStartLocation;
+            _Bounds = aBounds;
 
             Random rand = new Random();
             _Velocity = new Vector2((float)rand.NextDouble(), (float)rand.NextDouble());
@@ -128,18 +131,20 @@ namespace Connecting
 
         public void AccumulateForces()
         {
-            _Velocity = Vector2.Zero;
-
             Vector2 forces = Vector2.Zero;
+
+            for (int i = 0; i < 5; ++i)
+                _Forces[i] = Vector2.Zero;
+
             if (ParentFlock != null)
             {
                 _Forces[4] = ParentFlock.GetExternalForces(this);
 
                 // Always move toward CoM.  Pull harder if farther away.
-                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .25f, Radius * ParentFlock.People.Count);
+                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .2f, Radius * ParentFlock.People.Count);
                 
                 // Always move toward Target location
-                _Forces[1] = GetForceToward(ParentFlock.Location, 2f, 2.5f);
+                _Forces[1] = GetForceToward(ParentFlock.Location, .3f, 2.5f);
                 //forces += GetForceToward(ParentFlock.Location, 3.0f, Radius * ParentFlock.People.Count);
 
                 // Move away from all other boids
@@ -163,14 +168,24 @@ namespace Connecting
                     matchingForce += ParentFlock.People[i].Velocity;
                 }
                 _Forces[2] = avoidanceForce;
-                _Forces[3] = matchingForce / (ParentFlock.People.Count - 1) * .5f;
+                //_Forces[3] = matchingForce / (ParentFlock.People.Count - 1) * .5f;
 
                 for (int i = 0; i < 5; ++i)
                     forces += _Forces[i];
             }
 
+            if (Location.X < _Bounds.X)
+                forces.X += (_Bounds.X - Location.X) * 100.0f;
+            else if (Location.X > _Bounds.X + _Bounds.Width)
+                forces.X += ((_Bounds.X + _Bounds.Width) - Location.X) * 100.0f;
+
+            if (Location.Y < _Bounds.Y)
+                forces.Y += (_Bounds.Y - Location.Y) * 100.0f;
+            else if (Location.Y > _Bounds.Y + _Bounds.Height)
+                forces.Y += ((_Bounds.Y + _Bounds.Height) - Location.Y) * 100.0f;
+                
             // Always involve friction
-            forces += (-_Velocity) * .35f;
+            forces += (-_Velocity) * .2f;
 
             // Assume 1.0 mass, force is acceleration
             _Velocity += forces;
@@ -196,8 +211,8 @@ namespace Connecting
             if (_bHeld)
                 aBatch.Draw(s_HeldTexture, draw_loc, Color.White);
 
-            //for (int i = 0; i < 5; ++i)
-            //    DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
+            for (int i = 0; i < 5; ++i)
+                DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
         }
 
         public static void LoadContent(ContentManager aManager)

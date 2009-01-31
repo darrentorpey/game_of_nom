@@ -65,16 +65,17 @@ namespace Connecting
             // Add lots of people around randomly
             _Flock = new PersonFlock();
             _Flock.Location = new Vector2(rand.Next(0, Window.ClientBounds.Width), rand.Next(0, Window.ClientBounds.Height));
+            Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
             for (int i = 0; i < 20; ++i)
             {
-                Person newPerson = new Person(_Flock.Location);
+                Person newPerson = new Person(_Flock.Location, bounds);
                 _Flock.AddPerson(newPerson);
             }
 
             // Init people here so that we know the content (textures, etc.) are loaded
             GameObjectManager.Instance._Objects = new List<GameObject> {
-                new Person(new Vector2(100, 100)), 
-                new Person(new Vector2(200, 200)),
+                new Person(new Vector2(100, 100), bounds), 
+                new Person(new Vector2(200, 200), bounds),
                 _Flock
             };
         }
@@ -144,7 +145,7 @@ namespace Connecting
             if (state.RightButton == ButtonState.Pressed && 
                 lastMouseState.RightButton != ButtonState.Pressed)
             {
-                _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 1500.0f, 3.0f, 120));
+                _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 600.0f, 3.0f, 120));
             }
 
             if (this.inTransitByUser != null)
