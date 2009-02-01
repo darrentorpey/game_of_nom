@@ -33,8 +33,9 @@ namespace Connecting
         SpriteFont font;
         MouseState lastMouseState;
         KeyboardState lastKeyState;
-        PersonFlock _Flock;
+
         bool _bSingleStep = false;
+        bool _bPrintDebugInfo = false;
 
         public Game1()
         {
@@ -80,18 +81,18 @@ namespace Connecting
         private void spawnStartingObjects()
         {
             // Add lots of people around randomly
-            _Flock = new PersonFlock();
-            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, GameBoundaries.Width),
-                RandomInstance.Instance.Next(0, GameBoundaries.Height));
+            //_Flock = new PersonFlock();
+            //_Flock.Location = new Vector2(RandomInstance.Instance.Next(0, GameBoundaries.Width),
+            //    RandomInstance.Instance.Next(0, GameBoundaries.Height));
             Rectangle bounds = new Rectangle(13, 13, GameBoundaries.Width, GameBoundaries.Height - 26);
-            for (int i = 0; i < 10; ++i)
-            {
-                Person newPerson = new Person(_Flock.Location, bounds);
-                _Flock.AddPerson(newPerson);
-            }
+            //for (int i = 0; i < 10; ++i)
+            //{
+            //    Person newPerson = new Person(_Flock.Location, bounds);
+            //    _Flock.AddPerson(newPerson);
+            //}
 
-            // Init people here so that we know the content (textures, etc.) are loaded
-            GameObjectManager.Instance.AddObject(_Flock);
+            //// Init people here so that we know the content (textures, etc.) are loaded
+            //GameObjectManager.Instance.AddObject(_Flock);
 
             for (int i = 0; i < 10; ++i) {
                 GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
@@ -251,10 +252,15 @@ namespace Connecting
                     {
                         if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                            if (!(manager[i] is FoodSource || (manager[i] is Person && ((Person)manager[i]).Dead))) {
+                            if (manager[i].CanBeHeld)
+                            {
                                 this.inTransitByUser = manager[i];
                                 manager[i].Hold();
                                 SoundState.Instance.PlayPickupSound(aTime);
+                            }
+                            else if(_bPrintDebugInfo)
+                            {
+                                Console.WriteLine(manager[i].GetDebugInfo());
                             }
                         }
                     }

@@ -30,10 +30,11 @@ namespace Connecting
         private int _iSpawnDelay = c_poofAnim;
 
         private GameObject _Eater;
-        private bool _BeingEaten = false;
         private bool _Dead = false;
 
         public bool NoStartAnimation = false;
+
+        public override bool CanBeHeld { get { return false; } }
         public Fruit FruitType { get; set; }
 
         public bool CanEat { get { return !_Dead && _Eater == null; } }
@@ -79,6 +80,7 @@ namespace Connecting
         public void StopEating(GameObject aEater)
         {
             Debug.Assert(aEater == _Eater);
+            _Eater = null;
         }
 
         /// <summary>
@@ -129,6 +131,11 @@ namespace Connecting
                 textureToDraw = s_FruitTextureSets[(int)FruitType][_AmountLeft - 1];
             }
             aBatch.Draw(textureToDraw, draw_loc, Color.White);
+        }
+
+        public override string GetDebugInfo()
+        {
+            return String.Format("Location: {0}, CanEat: {1}, Eater: {2}", Location.ToString(), CanEat, _Eater);
         }
 
         public static void LoadContent(ContentManager aManager)

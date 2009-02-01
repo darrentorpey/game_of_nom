@@ -48,6 +48,7 @@ namespace Connecting
 
         private State _eMyState = State.Normal;
 
+        public override bool CanBeHeld { get { return true; } }
         public override float Radius
         {
             get { return _fCurrentRadius; }
@@ -169,9 +170,13 @@ namespace Connecting
 
             if (_People.Count == 1)
                 RemoveFromFlock(_People[0]);
-            
+
             if (_People.Count == 0)
+            {
+                if (EatingObject != null)
+                    EatingObject.StopEating(this);
                 GameObjectManager.Instance.RemoveObject(this);
+            }
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
@@ -222,6 +227,12 @@ namespace Connecting
 
             return retMood;
         }
+        
+        public override string GetDebugInfo()
+        {
+            return "";
+        }
+
 
         private void updateAllNearby()
         {
@@ -234,7 +245,7 @@ namespace Connecting
                 GameObject currObj = manager[i];
                 if (this != currObj)
                 {
-                    if (currObj.CollidesWith(this))
+                    if (currObj.CollidesWith(this) && (currObj is Person || currObj is PersonFlock))
                         _CollidingObject = currObj;
 
                     if(currObj is FoodSource)

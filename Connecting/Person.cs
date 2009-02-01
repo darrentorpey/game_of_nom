@@ -41,6 +41,7 @@ namespace Connecting
         public enum State
         {
             Alone,
+            Limbo,      // Used for before we enter the flocking state
             Flocking,
             Held,
             Eating,
@@ -68,6 +69,10 @@ namespace Connecting
         }
 
         public bool Dead { get { return _eMyState == State.Dead; } }
+        public override bool CanBeHeld
+        {
+            get { return _eMyState != State.Dead; }
+        }
 
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
@@ -149,6 +154,9 @@ namespace Connecting
                     manager.RemoveObject(this);
                     manager.RemoveObject(_CollidingObject);
 
+                    _eMyState = State.Limbo;
+                    ((Person)_CollidingObject)._eMyState = State.Limbo;
+
                     PersonFlock flock = new PersonFlock();
                     flock.AddPerson(this);
                     flock.AddPerson((Person)_CollidingObject);
@@ -159,7 +167,6 @@ namespace Connecting
                     {
                         _CollidingObject.EatingObject.StopEating(_CollidingObject);
                         _CollidingObject.EatingObject = null;
-                        //_CollidingObject._eMyState = State.Alone;
                     }
                 }
 
@@ -329,7 +336,8 @@ namespace Connecting
                 GameObject currObj = manager[i];
                 if (this != currObj)
                 {
-                    if (currObj.CollidesWith(this))
+                    // Can only collide with person or person flock.
+                    if (currObj.CollidesWith(this) && (currObj is Person || currObj is PersonFlock))
                         _CollidingObject = currObj;
 
                     if (currObj is FoodSource)
@@ -592,6 +600,11 @@ namespace Connecting
 
             //for (int i = 0; i < 5; ++i)
             //    DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
+        }
+
+        public override string GetDebugInfo()
+        {
+            return "";
         }
 
         public static void LoadContent(ContentManager aManager)
