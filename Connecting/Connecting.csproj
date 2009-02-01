@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Angel.cs" />
+    <Compile Include="MusicState.cs" />
     <Compile Include="SoundState.cs" />
     <Compile Include="FoodSource.cs" />
     <Compile Include="DrawUtils.cs" />

@@ -79,6 +79,8 @@ namespace Connecting
             Tombstone.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
+            MusicState.LoadContent(Content);
+            MusicState.Instance.Play();
             font = Content.Load<SpriteFont>("Helvetica");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
