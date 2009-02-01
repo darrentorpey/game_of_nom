@@ -292,6 +292,12 @@ namespace Connecting
                     break;
                 case State.Held:
                     MyHoverMood = getMood();
+                    if (_NearbyFoodSources.Count > 0)
+                    {
+                        // Look at what you want to eat.
+                        Vector2 lookDirection = Location - _NearbyFoodSources.Peek().Location;
+                        MyLook = lookDirection.X < 0 ? LookDirection.Right : LookDirection.Left;
+                    }
                     break;
             }
         }
