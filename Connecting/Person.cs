@@ -182,7 +182,6 @@ namespace Connecting
             switch(_eMyState)
             {
                 case State.Dead:
-                    Console.WriteLine("dead");
                     MyMood = getMood();
                     break;
                 case State.Eating:
