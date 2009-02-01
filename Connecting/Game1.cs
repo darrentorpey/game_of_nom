@@ -302,7 +302,7 @@ namespace Connecting
                         //{
                         //    CurrentGameState = GameState.Running;
                         //}
-                        if (keysPressed.Count() > 0)
+                        if (keysPressed.Length > 0)
                         {
                             CurrentGameState = GameState.Running;
                             MusicState.Instance.Play();
@@ -328,7 +328,7 @@ namespace Connecting
                         //    // Restart the game
                         //    Restart();
                         //}
-                        if (keysPressed.Count() > 0)
+                        if (keysPressed.Length > 0)
                         {
                             // Restart the game
                             Restart();
@@ -347,7 +347,7 @@ namespace Connecting
 
                         break;
                     case GameState.Victory:
-                        if (keysPressed.Count() > 0)
+                        if (keysPressed.Length > 0)
                         {
                             // Restart the game
                             Restart();
