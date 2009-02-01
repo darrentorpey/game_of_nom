@@ -41,6 +41,7 @@ namespace Connecting
         public enum State
         {
             Alone,
+            Limbo,      // Used for before we enter the flocking state
             Flocking,
             Held,
             Eating,
@@ -68,6 +69,10 @@ namespace Connecting
         }
 
         public bool Dead { get { return _eMyState == State.Dead; } }
+        public override bool CanBeHeld
+        {
+            get { return _eMyState != State.Dead; }
+        }
 
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
@@ -106,8 +111,7 @@ namespace Connecting
             Location = aStartLocation;
             _Bounds = aBounds;
 
-            _Velocity = new Vector2((float)RandomInstance.Instance.NextDouble(), 
-                (float)RandomInstance.Instance.NextDouble());
+            _Velocity = Vector2.Zero;
         }
 
         public void AddedToFlock(PersonFlock aFlock)
@@ -125,6 +129,12 @@ namespace Connecting
         public override void Hold()
         {
             _eMyState = State.Held;
+            _Velocity = Vector2.Zero;
+            if (EatingObject != null)
+            {
+                EatingObject.StopEating(this);
+                EatingObject = null;
+            }
         }
 
         public override void Drop()
@@ -144,31 +154,32 @@ namespace Connecting
                     manager.RemoveObject(this);
                     manager.RemoveObject(_CollidingObject);
 
+                    _eMyState = State.Limbo;
+                    ((Person)_CollidingObject)._eMyState = State.Limbo;
+
                     PersonFlock flock = new PersonFlock();
                     flock.AddPerson(this);
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
                     manager.AddObject(flock);
+
+                    if (_CollidingObject.EatingObject != null)
+                    {
+                        _CollidingObject.EatingObject.StopEating(_CollidingObject);
+                        _CollidingObject.EatingObject = null;
+                    }
                 }
 
                 _CollidingObject = null;
             }
-
-            if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
-            {
-                EatingObject.BeingEaten = false;
-                EatingObject = null;
-            }
-
-            startEatingIfPossible();
         }
 
         private void startEatingIfPossible()
         {
-            if (_NearbyFoodSources.Count > 0)
+            if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.First().CanEat)
             {
-                _NearbyFoodSources.First().BeingEaten = true;
                 EatingObject = _NearbyFoodSources.First();
+                EatingObject.StartEating(this);
                 _eMyState = State.Eating;
             }
         }
@@ -177,13 +188,6 @@ namespace Connecting
         {
             updateHunger();
             updateAllNearby();
-
-            if (_eMyState == State.Eating && EatingObject.Dead)
-            {
-                EatingObject = null;
-                _eMyState = State.Alone;
-                _eMyAloneState = AloneState.StandingStill;
-            }
 
             switch(_eMyState)
             {
@@ -196,6 +200,12 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Eating:
+                    if (EatingObject != null && !EatingObject.Eat(aTime))
+                    {
+                        EatingObject.StopEating(this);
+                        EatingObject = null;
+                        _eMyState = State.Alone;
+                    }
                     MyMood = getMood();
                     break;
                 case State.Flocking:
@@ -297,11 +307,11 @@ namespace Connecting
                             if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
                                 _WalkVelocity.Y = -_WalkVelocity.Y;
 
-                            startEatingIfPossible();
-
                             MyMood = getMood();
                             break;
                     }
+                    startEatingIfPossible();
+
                     break;
                 case State.Held:
                     MyHoverMood = getMood();
@@ -326,17 +336,15 @@ namespace Connecting
                 GameObject currObj = manager[i];
                 if (this != currObj)
                 {
-                    if (currObj.CollidesWith(this))
-                    {
+                    // Can only collide with person or person flock.
+                    if (currObj.CollidesWith(this) && (currObj is Person || currObj is PersonFlock))
                         _CollidingObject = currObj;
-                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
-                        {
-                            _NearbyFoodSources.Push((FoodSource)currObj);
-                        }
-                    }
-                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+
+                    if (currObj is FoodSource)
                     {
-                        _NearbyFoodSources.Push((FoodSource)currObj);
+                        FoodSource mySource = (FoodSource)currObj;
+                        if (mySource.CanEat && mySource.InProximity(this, FOOD_PROXIMITY))
+                            _NearbyFoodSources.Push((FoodSource)currObj);
                     }
                 }
             }
@@ -597,6 +605,11 @@ namespace Connecting
 
             //for (int i = 0; i < 5; ++i)
             //    DrawUtils.DrawLine(aBatch, Location, Location + _Forces[i], _ForceColors[i]);
+        }
+
+        public override string GetDebugInfo()
+        {
+            return "";
         }
 
         public static void LoadContent(ContentManager aManager)

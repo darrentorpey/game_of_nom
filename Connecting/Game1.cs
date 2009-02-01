@@ -28,13 +28,17 @@ namespace Connecting
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
 
-        float _fFruitSpawnRate = 20.0f;
+        int _iFruitSpawnRate = 3000;
+        int _iPersonSpawnRate = 12000;
+        int _iTimeToFruit;
+        int _iTimeToPerson;
 
         SpriteFont font;
         MouseState lastMouseState;
         KeyboardState lastKeyState;
-        PersonFlock _Flock;
+
         bool _bSingleStep = false;
+        bool _bPrintDebugInfo = false;
 
         public Game1()
         {
@@ -44,6 +48,9 @@ namespace Connecting
             graphics.PreferredBackBufferWidth = GameBoundaries.Width;
             graphics.PreferredBackBufferHeight = GameBoundaries.Height + 100;
             Content.RootDirectory = "Content";
+
+            _iTimeToFruit = _iFruitSpawnRate;
+            _iTimeToPerson = _iPersonSpawnRate;
         }
 
         /// <summary>
@@ -72,7 +79,6 @@ namespace Connecting
             Tombstone.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
-            SoundState.Instance.ToggleSound();
             font = Content.Load<SpriteFont>("Helvetica");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
@@ -90,21 +96,21 @@ namespace Connecting
         private void spawnStartingObjects()
         {
             // Add lots of people around randomly
-            _Flock = new PersonFlock();
-            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, GameBoundaries.Width),
-                RandomInstance.Instance.Next(0, GameBoundaries.Height));
+            //_Flock = new PersonFlock();
+            //_Flock.Location = new Vector2(RandomInstance.Instance.Next(0, GameBoundaries.Width),
+            //    RandomInstance.Instance.Next(0, GameBoundaries.Height));
             Rectangle bounds = new Rectangle(13, 13, GameBoundaries.Width, GameBoundaries.Height - 26);
-            for (int i = 0; i < 10; ++i)
-            {
-                Person newPerson = new Person(_Flock.Location, bounds);
-                _Flock.AddPerson(newPerson);
-            }
+            //for (int i = 0; i < 10; ++i)
+            //{
+            //    Person newPerson = new Person(_Flock.Location, bounds);
+            //    _Flock.AddPerson(newPerson);
+            //}
 
-            // Init people here so that we know the content (textures, etc.) are loaded
-            GameObjectManager.Instance.AddObject(_Flock);
+            //// Init people here so that we know the content (textures, etc.) are loaded
+            //GameObjectManager.Instance.AddObject(_Flock);
 
             for (int i = 0; i < 10; ++i) {
-                GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
+                GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50, bounds), bounds));
             }
 
             for (int i = 0; i < 3; ++i)
@@ -125,11 +131,12 @@ namespace Connecting
             //GameObjectManager.Instance.AddObject(new Angel(getRandomLocation(50)));
         }
 
-        private Vector2 getRandomLocation(int borderPadding)
+        private Vector2 getRandomLocation(int borderPadding, Rectangle aBounds)
         {
             return new Vector2(
-                RandomInstance.Instance.Next(borderPadding, GameBoundaries.Width - borderPadding),
-                RandomInstance.Instance.Next(borderPadding, GameBoundaries.Height - borderPadding));
+                RandomInstance.Instance.Next(aBounds.Left + borderPadding, aBounds.Right - borderPadding),
+                RandomInstance.Instance.Next(aBounds.Top + borderPadding, aBounds.Bottom - borderPadding)
+            );
         }
 
         /// <summary>
@@ -157,25 +164,33 @@ namespace Connecting
 
             processKeyboardEvents(gameTime);
 
-            spawnMoreFood();
+            spawnMoreFood(gameTime);
+            //spawnMorePeople(gameTime);
 
             // TODO: Add your update logic here
             base.Update(gameTime);
         }
 
-        private int ticksTillFruitSpawn;
-
-        private void spawnMoreFood()
+        private void spawnMorePeople(GameTime aTime)
         {
-            if (0 == ticksTillFruitSpawn)
+            if (_iTimeToPerson <= 0)
             {
-                spawnRandomFruit();
-                ticksTillFruitSpawn = (int)(10 * _fFruitSpawnRate);
+                spawnPerson(true);
+                _iTimeToPerson = _iPersonSpawnRate;
             }
             else
+                _iTimeToPerson -= aTime.ElapsedGameTime.Milliseconds;
+        }
+
+        private void spawnMoreFood(GameTime aTime)
+        {
+            if (_iTimeToFruit <= 0)
             {
-                ticksTillFruitSpawn--;
+                spawnRandomFruit();
+                _iTimeToFruit = _iFruitSpawnRate;
             }
+            else
+                _iTimeToFruit -= aTime.ElapsedGameTime.Milliseconds;
         }
 
         private void spawnRandomFruit()
@@ -185,20 +200,45 @@ namespace Connecting
 
         private void spawnFruit(FoodSource.Fruit fruitType)
         {
-            GameObjectManager.Instance.AddObject(new FoodSource(getRandomLocation(50), fruitType));
+            GameObjectManager.Instance.AddObject(new FoodSource(getRandomLocation(50, GameBoundaries), fruitType));
         }
 
         private void spawnFruit(FoodSource.Fruit fruitType, bool skipStartAnimation)
         {
-            FoodSource foodSource = new FoodSource(getRandomLocation(50), fruitType);
+            FoodSource foodSource = new FoodSource(getRandomLocation(50, GameBoundaries), fruitType);
             foodSource.NoStartAnimation = skipStartAnimation;
             GameObjectManager.Instance.AddObject(foodSource);
         }
 
-        private void spawnPerson()
+        private void spawnPerson(bool abOffScreen)
         {
-            Rectangle bounds = new Rectangle(0, 0, GameBoundaries.Width, GameBoundaries.Height);
-            GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
+            Rectangle personBounds = new Rectangle(13, 13, GameBoundaries.Width, GameBoundaries.Height - 26);
+
+            if (abOffScreen)
+            {
+                int iside = RandomInstance.Instance.Next(0, 5);
+                Rectangle spawnBounds = Rectangle.Empty;
+                switch (iside)
+                {
+                    case 0: // Left
+                        spawnBounds = new Rectangle(-100, 0, 100, GameBoundaries.Height);
+                        break;
+                    case 1: // Right
+                        spawnBounds = new Rectangle(GameBoundaries.Width, 0, 100, GameBoundaries.Height);
+                        break;
+                    case 2: // Top
+                        spawnBounds = new Rectangle(0, -100, GameBoundaries.Width, 100);
+                        break;
+                    case 3: //Bottom
+                        spawnBounds = new Rectangle(0, GameBoundaries.Height, GameBoundaries.Width, 100);
+                        break;
+                }
+                GameObjectManager.Instance.AddObject(new Person(getRandomLocation(0, spawnBounds), personBounds));
+            }
+            else
+            {
+                GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50, personBounds), personBounds));
+            }
         }
 
         private void processKeyboardEvents(GameTime gameTime)
@@ -263,11 +303,15 @@ namespace Connecting
                     {
                         if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                            if (!(manager[i] is FoodSource) && !(manager[i] is Angel) && !(manager[i] is Tombstone) && !(manager[i] is Person && ((Person)manager[i]).Dead))
+                            if (manager[i].CanBeHeld)
                             {
                                 this.inTransitByUser = manager[i];
                                 manager[i].Hold();
                                 SoundState.Instance.PlayPickupSound(aTime);
+                            }
+                            else if(_bPrintDebugInfo)
+                            {
+                                Console.WriteLine(manager[i].GetDebugInfo());
                             }
                         }
                     }
@@ -287,14 +331,10 @@ namespace Connecting
                         {
                             if (manager[i] is Person)
                             {
-                                manager[i]._Hunger += 50;
+                                manager[i]._Hunger += 100;
                             }
                         }
                     }
-                }
-                else
-                {
-                    _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 600.0f, 3.0f, 120));
                 }
             }
 

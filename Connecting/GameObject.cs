@@ -12,6 +12,7 @@ namespace Connecting
         public Vector2 Location = Vector2.Zero;
 
         public abstract float Radius { get; }
+
         public int _Hunger = 0;
         public int Hunger { get { return _Hunger; } }
 
@@ -48,11 +49,16 @@ namespace Connecting
 
         public abstract void Hold();
         public abstract void Drop();
+
+        public virtual string GetDebugInfo() {
+            return "";
+        }
        
         public virtual void MoveTo(ref Vector2 aLocation)
         {
             Location = aLocation;
         }
+        public virtual bool CanBeHeld { get { return false; } }
 
         public abstract void Draw(SpriteBatch aBatch, GameTime aTime);
         public abstract void Update(GameTime aTime);
