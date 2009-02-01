@@ -367,59 +367,56 @@ namespace Connecting
                     retMood = Mood.Dead;
                     break;
                 case State.Alone:
-                    if (_Hunger > (int)HungerLevel.Hungry) {
-                        if (_Hunger > (int)HungerLevel.Starving)
+                    {
+                        Mood hungerMood = getHungerMood();
+                        if(hungerMood == Mood.Neutral)
                         {
-                            // REALLY Hungry!
-                            retMood = Mood.Starving;
-                        }
-                        else
-                        {
-                            // Getting kinda hungry
-                            retMood = Mood.Sad;
+                            if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
+                                retMood = Mood.Confused;
+                            }
+                            else
+                                retMood = Mood.Neutral;
                         }
                     }
-                    else if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
-                        retMood = Mood.Confused;
-                    }
-                    else
-                        retMood = Mood.Neutral;
                     break;
                 case State.Flocking:
-                    retMood = MyMood;
-                    if (_Hunger > (int)HungerLevel.Starving)
-                        retMood = Mood.Starving;
-                    switch (retMood)
                     {
-                        // Mostly, I want the flock's mood
-                        case Mood.Excited:
-                        case Mood.Happy:
-                        case Mood.Confused:
-                        case Mood.Eating:
-                            retMood = ParentFlock.GetMood();
-                            if (_fSensitivity > 50.0f)
-                                retMood = Mood.Sad;
-                            break;
-                        // But when I'm sad, hungry or angry, I want my mood
-                        case Mood.Hungry:
-                        case Mood.Starving:
-                            Mood flockMood = ParentFlock.GetMood();
-                            if (flockMood == Mood.Excited || flockMood == Mood.Eating)
-                                retMood = flockMood;
-                            break;
-                        case Mood.Sad:
-                            if (_fSensitivity < 20.0f)
-                                retMood = Mood.Happy;
-                            else if (_fSensitivity > 120.0f)
-                                retMood = Mood.Angry;
-                            break;
-                        case Mood.Angry:
-                            if (_fSensitivity < 40.0f)
-                                retMood = Mood.Sad;
-                            break;
+                        retMood = MyMood;
+                        Mood hungerMood = getHungerMood();
+                        if (hungerMood != Mood.Neutral)
+                            retMood = hungerMood;
+                        switch (retMood)
+                        {
+                            // Mostly, I want the flock's mood
+                            case Mood.Excited:
+                            case Mood.Neutral:
+                            case Mood.Happy:
+                            case Mood.Confused:
+                            case Mood.Eating:
+                                retMood = ParentFlock.GetMood();
+                                if (_fSensitivity > 50.0f)
+                                    retMood = Mood.Sad;
+                                break;
+                            // But when I'm sad, hungry or angry, I want my mood
+                            case Mood.Hungry:
+                            case Mood.Starving:
+                                Mood flockMood = ParentFlock.GetMood();
+                                if (flockMood == Mood.Excited || flockMood == Mood.Eating)
+                                    retMood = flockMood;
+                                break;
+                            case Mood.Sad:
+                                if (_fSensitivity < 20.0f)
+                                    retMood = Mood.Happy;
+                                else if (_fSensitivity > 120.0f)
+                                    retMood = Mood.Angry;
+                                break;
+                            case Mood.Angry:
+                                if (_fSensitivity < 40.0f)
+                                    retMood = Mood.Sad;
+                                break;
+                        }
                     }
                     break;
-
                 case State.Eating:
                     retMood = Mood.Eating;
                     break;
@@ -436,6 +433,26 @@ namespace Connecting
                     else
                         goto case State.Alone;
                     break;
+            }
+
+            return retMood;
+        }
+
+        private Mood getHungerMood()
+        {
+            Mood retMood = Mood.Neutral;
+            if (_Hunger > (int)HungerLevel.Hungry)
+            {
+                if (_Hunger > (int)HungerLevel.Starving)
+                {
+                    // REALLY Hungry!
+                    retMood = Mood.Starving;
+                }
+                else
+                {
+                    // Getting kinda hungry
+                    retMood = Mood.Hungry;
+                }
             }
 
             return retMood;
@@ -486,7 +503,7 @@ namespace Connecting
                     if (dist < 40.0f)
                     {
                         Vector2 force = (this.Location - manager[i].Location);
-                        externalAvoidanceForce += force;
+                        externalAvoidanceForce += (force * .5f);
                     }
                 }
 
