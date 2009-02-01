@@ -98,14 +98,19 @@ namespace Connecting
                 GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
             }
 
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < 3; ++i)
             {
                 spawnFruit(FoodSource.Fruit.Grapes, true);
             }
 
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < 3; ++i)
             {
                 spawnFruit(FoodSource.Fruit.Orange, true);
+            }
+
+            for (int i = 0; i < 3; ++i)
+            {
+                spawnFruit(FoodSource.Fruit.Banana, true);
             }
         }
 
@@ -204,6 +209,10 @@ namespace Connecting
                 else if (keyState.IsKeyDown(Keys.D2))
                 {
                     spawnFruit(FoodSource.Fruit.Orange);
+                }
+                else if (keyState.IsKeyDown(Keys.D3))
+                {
+                    spawnFruit(FoodSource.Fruit.Banana);
                 }
                 else
                 {

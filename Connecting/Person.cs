@@ -30,8 +30,9 @@ namespace Connecting
             Starving = 7,
             Hungry = 8,
             Dead = 9,
+            Neutral = 10,
 
-            Count = 10
+            Count = 11
         }
 
         public enum State
@@ -45,7 +46,8 @@ namespace Connecting
 
         public enum HungerLevel
         {
-            Starving = 400,
+            Hungry = 400,
+            Starving = 800,
             Dead = 1000
         }
 
@@ -362,15 +364,23 @@ namespace Connecting
                     retMood = Mood.Dead;
                     break;
                 case State.Alone:
-                    if (_Hunger > (int)HungerLevel.Starving) {
-                        // Hungry!
-                        retMood = Mood.Starving;
+                    if (_Hunger > (int)HungerLevel.Hungry) {
+                        if (_Hunger > (int)HungerLevel.Starving)
+                        {
+                            // REALLY Hungry!
+                            retMood = Mood.Starving;
+                        }
+                        else
+                        {
+                            // Getting kinda hungry
+                            retMood = Mood.Sad;
+                        }
                     }
                     else if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
                         retMood = Mood.Confused;
                     }
                     else
-                        retMood = Mood.Sad;
+                        retMood = Mood.Neutral;
                     break;
                 case State.Flocking:
                     retMood = MyMood;
