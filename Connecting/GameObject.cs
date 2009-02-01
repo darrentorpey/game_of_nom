@@ -12,6 +12,8 @@ namespace Connecting
         public Vector2 Location = Vector2.Zero;
 
         public abstract float Radius { get; }
+        public int _Hunger = 0;
+        public int Hunger { get { return _Hunger; } }
 
         public bool RadiusCheck(ref Vector2 aPoint, float afRadius)
         {

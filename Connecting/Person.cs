@@ -26,8 +26,11 @@ namespace Connecting
             Excited = 4,
             Eating = 5,
             Surprise = 6,
+            Starving = 7,
+            Hungry = 8,
+            Dead = 9,
 
-            Count = 7
+            Count = 10
         }
 
         public enum State
@@ -35,7 +38,14 @@ namespace Connecting
             Alone,
             Flocking,
             Held,
-            Eating
+            Eating,
+            Dead
+        }
+
+        public enum HungerLevel
+        {
+            Starving = 400,
+            Dead = 1000
         }
 
         public enum AloneState
@@ -145,6 +155,8 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
+            updateHunger();
+
             if (ParentFlock != null)
                 _eMyState = State.Flocking;
 
@@ -156,6 +168,10 @@ namespace Connecting
             }
             switch(_eMyState)
             {
+                case State.Dead:
+                    Console.WriteLine("dead");
+                    MyMood = getMood();
+                    break;
                 case State.Eating:
                     MyMood = getMood();
                     break;
@@ -165,6 +181,7 @@ namespace Connecting
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
                     break;
                 case State.Alone:
+
                     AccumulateForces();
                     if (_iNextThink <= 0)
                     {
@@ -236,8 +253,29 @@ namespace Connecting
             }
         }
 
+        private void updateHunger()
+        {
+            _Hunger += 1;
+
+            if (_eMyState == State.Eating)
+            {
+                _Hunger -= 2;
+            }
+
+            if (_Hunger > (int)HungerLevel.Dead)
+            {
+                // R.I.P.
+                _eMyState = State.Dead;
+            }
+        }
+
         private Mood getMood()
         {
+            if (_eMyState == State.Dead)
+            {
+                return Mood.Dead;
+            }
+
             _NearbyFoodSources.Clear();
 
             GameObjectManager manager = GameObjectManager.Instance;
@@ -284,8 +322,16 @@ namespace Connecting
             }
             else
             {
-                // Otherwise, that makes us a SAD PANDA
-                return Mood.Sad;
+                if (_Hunger > (int)HungerLevel.Starving)
+                {
+                    // Hungry!
+                    return Mood.Starving;
+                }
+                else
+                {
+                    // Otherwise, that makes us a SAD PANDA
+                    return Mood.Sad;
+                }
             }
         }
 

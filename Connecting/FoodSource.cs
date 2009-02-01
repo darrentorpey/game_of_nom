@@ -15,6 +15,8 @@ namespace Connecting
         int _TicksEaten = 0;
         public bool Dead = false;
 
+        static Texture2D s_PoofTexture;
+
         static Texture2D[][] s_FruitTextureSets;
 
         public enum Fruit
@@ -25,9 +27,9 @@ namespace Connecting
             Count = 2
         }
 
-        public Fruit FruitType { get; set; }
+        int _ticksSinceSpawn = 0;
 
-        private static Texture2D[] s_FoodTextures;
+        public Fruit FruitType { get; set; }
 
         private bool _BeingEaten = false;
 
@@ -67,6 +69,9 @@ namespace Connecting
 
         public override void Update(GameTime aTime)
         {
+            _ticksSinceSpawn++;
+
+            // Shouldn't this be conditional?
             _TicksEaten++;
 
             if (BeingEaten && _TicksEaten%(10*c_decayMultiplier) == 0)
@@ -88,7 +93,16 @@ namespace Connecting
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_FruitTextureSets[(int)FruitType][0].Width / 2), Location.Y - (float)(s_FruitTextureSets[(int)FruitType][0].Height / 2));
-            aBatch.Draw(s_FruitTextureSets[(int)FruitType][_AmountLeft - 1], draw_loc, Color.White);
+            Texture2D textureToDraw;
+            if (_ticksSinceSpawn < 35)
+            {
+                textureToDraw = s_PoofTexture;
+            }
+            else
+            {
+                textureToDraw = s_FruitTextureSets[(int)FruitType][_AmountLeft - 1];
+            }
+            aBatch.Draw(textureToDraw, draw_loc, Color.White);
         }
 
         public static void LoadContent(ContentManager aManager)
@@ -105,6 +119,8 @@ namespace Connecting
                 s_FruitTextureSets[(int)Fruit.Grapes][i] = aManager.Load<Texture2D>("food/food_grapes_" + i);
                 s_FruitTextureSets[(int)Fruit.Orange][i] = aManager.Load<Texture2D>("food/food_orange_" + i);
             }
+
+            s_PoofTexture = aManager.Load<Texture2D>("food/food_poof_1");
         }
 
     }

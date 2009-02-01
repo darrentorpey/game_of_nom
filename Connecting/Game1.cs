@@ -22,7 +22,7 @@ namespace Connecting
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
 
-        float _fFruitSpawnRate = 5.0f;
+        float _fFruitSpawnRate = 20.0f;
 
         SpriteFont font;
         MouseState lastMouseState;
