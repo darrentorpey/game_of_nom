@@ -209,11 +209,11 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Flocking:
-                    const float c_fForceSensitivity = 0.0f;
-                    const float c_fCalmingForce = 200.0f;
+                    const float c_fForceSensitivity = .7f;
+                    const float c_fCalmingForce = 100.0f;
                     const float c_fHungerFactor = 50.0f;
-                    const float c_fExplosionTollerange = 500.0f;
-                    const float c_fExplositionForceMul = 1.3f;
+                    const float c_fExplosionTollerange = 225.0f;
+                    const float c_fExplositionForceMul = 100.0f;
 
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
@@ -410,10 +410,10 @@ namespace Connecting
                     break;
                 case State.Flocking:
                     {
-                        const float c_fAgitatedLowTolerance = 30.0f;
-                        const float c_fAgitatedHighTolerance = 100.0f;
-                        const float c_fAngryLowTolerance = 60.0f;
-                        const float c_fAngryHighTolerance = 200.0f;
+                        const float c_fAgitatedLowTolerance = 5.0f;
+                        const float c_fAgitatedHighTolerance = 30.0f;
+                        const float c_fAngryLowTolerance = 50.0f;
+                        const float c_fAngryHighTolerance = 150.0f;
 
                         retMood = MyMood;
                         Mood hungerMood = getHungerMood();
@@ -437,6 +437,8 @@ namespace Connecting
                                 Mood flockMood = ParentFlock.GetMood();
                                 if (flockMood == Mood.Excited || flockMood == Mood.Eating)
                                     retMood = flockMood;
+                                if (_fSensitivity > c_fAngryHighTolerance)
+                                    retMood = Mood.Angry;
                                 break;
                             case Mood.Agitated:
                                 if (_fSensitivity < c_fAgitatedLowTolerance)
