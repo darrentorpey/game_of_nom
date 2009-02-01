@@ -348,6 +348,11 @@ namespace Connecting
             if (_Hunger > (int)HungerLevel.Dead)
             {
                 // R.I.P.
+                if (_eMyState != State.Dead)
+                {
+                    // First time we've seen we're dead...
+                    GameObjectManager.Instance.reap(this);
+                }
                 _eMyState = State.Dead;
             }
         }

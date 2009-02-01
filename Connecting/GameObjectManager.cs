@@ -64,5 +64,25 @@ namespace Connecting
             for (int i = 0; i < _Objects.Count; ++i)
                 _Objects[i].Draw(aBatch, aTime);
         }
+
+        // Special stuff
+        public void reap(Person casualty)
+        {
+            GameObjectManager.Instance.AddObject(new Angel(casualty.Location, casualty));
+        }
+
+        private int _CountDead = 0;
+
+        public void registerDead(Person casualty)
+        {
+            _CountDead++;
+            GameObjectManager.Instance.AddObject(new Tombstone(casualty.Location));
+            GameObjectManager.Instance.RemoveObject(casualty);
+        }
+
+        internal String getDeadScore()
+        {
+            return "" + _CountDead;
+        }
     }
 }

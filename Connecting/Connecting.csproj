@@ -84,6 +84,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Angel.cs" />
     <Compile Include="SoundState.cs" />
     <Compile Include="FoodSource.cs" />
     <Compile Include="DrawUtils.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="RandomInstance.cs" />
+    <Compile Include="Tombstone.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

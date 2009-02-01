@@ -68,6 +68,8 @@ namespace Connecting
 
             Person.LoadContent(Content);
             FoodSource.LoadContent(Content);
+            Angel.LoadContent(Content);
+            Tombstone.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
             SoundState.Instance.ToggleSound();
@@ -76,6 +78,13 @@ namespace Connecting
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
 
             spawnStartingObjects();
+
+            loadNavBar(spriteBatch);
+        }
+
+        private void loadNavBar(SpriteBatch spriteBatch)
+        {
+            GameObjectManager.Instance.AddObject(new Angel(new Vector2(100.0f, 650.0f), true));
         }
 
         private void spawnStartingObjects()
@@ -112,6 +121,8 @@ namespace Connecting
             {
                 spawnFruit(FoodSource.Fruit.Banana, true);
             }
+
+            //GameObjectManager.Instance.AddObject(new Angel(getRandomLocation(50)));
         }
 
         private Vector2 getRandomLocation(int borderPadding)
@@ -252,7 +263,8 @@ namespace Connecting
                     {
                         if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                            if (!(manager[i] is FoodSource || (manager[i] is Person && ((Person)manager[i]).Dead))) {
+                            if (!(manager[i] is FoodSource) && !(manager[i] is Angel) && !(manager[i] is Tombstone) && !(manager[i] is Person && ((Person)manager[i]).Dead))
+                            {
                                 this.inTransitByUser = manager[i];
                                 manager[i].Hold();
                                 SoundState.Instance.PlayPickupSound(aTime);
@@ -265,7 +277,25 @@ namespace Connecting
             if (state.RightButton == ButtonState.Pressed && 
                 lastMouseState.RightButton != ButtonState.Pressed)
             {
-                _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 600.0f, 3.0f, 120));
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                {
+
+                    GameObjectManager manager = GameObjectManager.Instance;
+                    for (int i = 0; i < manager.Count; ++i)
+                    {
+                        if (manager[i].RadiusCheck(ref mouseLoc, 0.0f))
+                        {
+                            if (manager[i] is Person)
+                            {
+                                manager[i]._Hunger += 50;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 600.0f, 3.0f, 120));
+                }
             }
 
             if (this.inTransitByUser != null)
@@ -297,13 +327,19 @@ namespace Connecting
 
             spriteBatch.Begin();
 
-            spriteBatch.Draw(menuBarTexture, new Rectangle(0, GameBoundaries.Height, GameBoundaries.Width, 100), Color.White);
+            drawNavBar();
             
             GameObjectManager.Instance.Draw(spriteBatch, gameTime);
             
             spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void drawNavBar()
+        {
+            spriteBatch.Draw(menuBarTexture, new Rectangle(0, GameBoundaries.Height, GameBoundaries.Width, 100), Color.White);
+            spriteBatch.DrawString(font, GameObjectManager.Instance.getDeadScore(), new Vector2(120.0f, 635.0f), Color.Black);
         }
 
         public void Restart()
