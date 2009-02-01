@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Angel.cs" />
+    <Compile Include="MusicState.cs" />
     <Compile Include="GameLogo.cs" />
     <Compile Include="GameLogoFull.cs" />
     <Compile Include="GameOverSplash.cs" />

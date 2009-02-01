@@ -50,9 +50,9 @@ namespace Connecting
 
         public enum HungerLevel
         {
-            Hungry = 400,
-            Starving = 800,
-            Dead = 1000
+            Hungry = 600,
+            Starving = 1000,
+            Dead = 1400
         }
 
         public enum AloneState
@@ -176,11 +176,15 @@ namespace Connecting
 
         private void startEatingIfPossible()
         {
-            if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.First().CanEat)
+            // Can't be going rediculously fast
+            if (_Velocity.Length() < 50.0f)
             {
-                EatingObject = _NearbyFoodSources.First();
-                EatingObject.StartEating(this);
-                _eMyState = State.Eating;
+                if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.First().CanEat)
+                {
+                    EatingObject = _NearbyFoodSources.First();
+                    EatingObject.StartEating(this);
+                    _eMyState = State.Eating;
+                }
             }
         }
 
@@ -200,6 +204,7 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Eating:
+                    _Velocity = Vector2.Zero;
                     if (EatingObject != null && !EatingObject.Eat(aTime))
                     {
                         EatingObject.StopEating(this);
@@ -209,10 +214,10 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Flocking:
-                    const float c_fForceSensitivity = .7f;
+                    const float c_fForceSensitivity = .6f;
                     const float c_fCalmingForce = 100.0f;
                     const float c_fHungerFactor = 50.0f;
-                    const float c_fExplosionTollerange = 225.0f;
+                    const float c_fExplosionTollerange = 250.0f;
                     const float c_fExplositionForceMul = 100.0f;
 
                     AccumulateForces();
@@ -361,13 +366,17 @@ namespace Connecting
         {
             _Hunger += 1;
 
-            if (_eMyState == State.Eating ||
-                (_eMyState == State.Flocking && ParentFlock.FlockState == PersonFlock.State.Eating))
+            if (_eMyState == State.Eating)
             {
                 _Hunger -= 2;
-                if (_Hunger < 0)
-                    _Hunger = 0;
             }
+            else if (_eMyState == State.Flocking && ParentFlock.FlockState == PersonFlock.State.Eating)
+            {
+                _Hunger -= 1.7f;
+            }
+            
+            if (_Hunger < 0)
+                _Hunger = 0;
 
             if (_Hunger > (int)HungerLevel.Dead)
             {

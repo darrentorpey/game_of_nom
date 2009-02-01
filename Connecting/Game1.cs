@@ -18,6 +18,11 @@ namespace Connecting
     /// </summary>
     public class GameOfNom : Microsoft.Xna.Framework.Game
     {
+        public static int c_iStartFruitSpawnRate = 4000;
+        public static int c_iFruitSpawnRateIncrease = 1000;
+        public static int c_iFruitSpawnIncreaseEvery = 3;
+        public static int c_iSwitchSongOnXObjects = 8;
+
         public static int GAME_HEIGHT = 600;
         public static int GAME_WIDTH = 900;
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -49,8 +54,9 @@ namespace Connecting
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
 
-        int _iFruitSpawnRate = 3000;
+        int _iFruitSpawnRate = c_iStartFruitSpawnRate;
         int _iPersonSpawnRate = 12000;
+        int _iFruitSpawns;
         int _iTimeToFruit;
         int _iTimeToPerson;
 
@@ -107,6 +113,7 @@ namespace Connecting
             Tombstone.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
+            MusicState.LoadContent(Content);
             GameLogo.LoadContent(Content);
             GameLogoFull.LoadContent(Content);
             GameOverSplash.LoadContent(Content);
@@ -246,6 +253,19 @@ namespace Connecting
                 spawnMoreFood(gameTime);
                 //spawnMorePeople(gameTime);
 
+                // Count relevant objects for music change
+                GameObjectManager manager = GameObjectManager.Instance;
+                int iobjectCount = 0;
+                for (int i = 0; i < manager.Count; ++i)
+                    if (manager[i].CanBeHeld)
+                        iobjectCount++;
+                if (iobjectCount >= c_iSwitchSongOnXObjects)
+                    MusicState.Instance.ActiveSong = 0;
+                else
+                    MusicState.Instance.ActiveSong = 1;
+
+                MusicState.Instance.Update(gameTime);
+
                 // TODO: Add your update logic here
                 base.Update(gameTime);
                 SoundState.Instance.ClearFinishedSounds(gameTime);
@@ -286,6 +306,7 @@ namespace Connecting
                         if (keysPressed.Count() > 0)
                         {
                             CurrentGameState = GameState.Running;
+                            MusicState.Instance.Play();
                         }
 
                         // Mouse 
@@ -367,7 +388,14 @@ namespace Connecting
             if (_iTimeToFruit <= 0)
             {
                 spawnRandomFruit();
+                _iFruitSpawns++;
+                if (_iFruitSpawns == c_iFruitSpawnIncreaseEvery)
+                {
+                    _iFruitSpawns = 0;
+                    _iPersonSpawnRate += c_iFruitSpawnRateIncrease;
+                }
                 _iTimeToFruit = _iFruitSpawnRate;
+
             }
             else
                 _iTimeToFruit -= aTime.ElapsedGameTime.Milliseconds;
@@ -474,12 +502,14 @@ namespace Connecting
         private void Pause()
         {
             SoundState.Instance.SoundPause();
+            MusicState.Instance.Pause();
             CurrentGameState = GameState.Paused;
         }
 
         private void Unpause()
         {
             SoundState.Instance.SoundResume();
+            MusicState.Instance.Play();
             CurrentGameState = GameState.Running;
         }
 
