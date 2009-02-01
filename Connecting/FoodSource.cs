@@ -14,6 +14,8 @@ namespace Connecting
 
         int _iEatDelay = 0;
 
+        public bool NoStartAnimation = false;
+
         public bool Dead = false;
 
         static Texture2D s_PoofTexture;
@@ -100,7 +102,7 @@ namespace Connecting
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_FruitTextureSets[(int)FruitType][0].Width / 2), Location.Y - (float)(s_FruitTextureSets[(int)FruitType][0].Height / 2));
             Texture2D textureToDraw;
-            if (_ticksSinceSpawn < 35)
+            if (_ticksSinceSpawn < 35 && aTime.TotalGameTime.TotalSeconds > 2 && !NoStartAnimation)
             {
                 textureToDraw = s_PoofTexture;
             }

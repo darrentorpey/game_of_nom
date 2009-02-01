@@ -89,12 +89,12 @@ namespace Connecting
 
             for (int i = 0; i < 5; ++i)
             {
-                spawnFruit(FoodSource.Fruit.Grapes);
+                spawnFruit(FoodSource.Fruit.Grapes, true);
             }
 
             for (int i = 0; i < 5; ++i)
             {
-                spawnFruit(FoodSource.Fruit.Orange);
+                spawnFruit(FoodSource.Fruit.Orange, true);
             }
         }
 
@@ -158,8 +158,14 @@ namespace Connecting
 
         private void spawnFruit(FoodSource.Fruit fruitType)
         {
-
             GameObjectManager.Instance.AddObject(new FoodSource(getRandomLocation(50), fruitType));
+        }
+
+        private void spawnFruit(FoodSource.Fruit fruitType, bool skipStartAnimation)
+        {
+            FoodSource foodSource = new FoodSource(getRandomLocation(50), fruitType);
+            foodSource.NoStartAnimation = skipStartAnimation;
+            GameObjectManager.Instance.AddObject(foodSource);
         }
 
         private void spawnPerson()
@@ -224,9 +230,11 @@ namespace Connecting
                     {
                         if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                           this.inTransitByUser = manager[i];
-                           manager[i].Hold();
-                           SoundState.Instance.PlayPickupSound(aTime);
+                            if (!(manager[i] is FoodSource || (manager[i] is Person && ((Person)manager[i]).Dead))) {
+                                this.inTransitByUser = manager[i];
+                                manager[i].Hold();
+                                SoundState.Instance.PlayPickupSound(aTime);
+                            }
                         }
                     }
                 }
@@ -261,7 +269,7 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.White);
+            GraphicsDevice.Clear(Color.LightCyan);
 
             spriteBatch.Begin();
             

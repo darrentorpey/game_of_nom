@@ -62,6 +62,8 @@ namespace Connecting
             Right
         }
 
+        public bool Dead { get { return _eMyState == State.Dead; } }
+
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
         private static Color[] _ForceColors = new Color[] {
