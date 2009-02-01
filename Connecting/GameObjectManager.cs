@@ -72,6 +72,13 @@ namespace Connecting
 
         private int _CountDead = 0;
 
+        public int CountDead { get { return _CountDead; } }
+
+        public void resetCountDead()
+        {
+            _CountDead = 0;
+        }
+
         public void registerDead(Person casualty)
         {
             _CountDead++;

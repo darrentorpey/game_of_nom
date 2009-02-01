@@ -84,6 +84,7 @@
     <Compile Include="MusicState.cs" />
     <Compile Include="GameLogo.cs" />
     <Compile Include="GameLogoFull.cs" />
+    <Compile Include="GameOverSplash.cs" />
     <Compile Include="SoundState.cs" />
     <Compile Include="FoodSource.cs" />
     <Compile Include="DrawUtils.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="RandomInstance.cs" />
     <Compile Include="Tombstone.cs" />
     <Compile Include="UIObject.cs" />
+    <Compile Include="VictorySplash.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

@@ -26,10 +26,14 @@ namespace Connecting
         public static int GAME_WIDTH = 900;
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+        private static int MAX_NOMS_DEAD = 5;
+
         private static GameObjectManager s_GameManPause = new GameObjectManager();
         private static GameObjectManager s_GameManStart = new GameObjectManager();
         private static GameObjectManager s_GameManGameOver = new GameObjectManager();
         private static GameObjectManager s_GameManVictory = new GameObjectManager();
+
+        private float _fGameMinutesElapsed = 0.0f;
 
         Texture2D menuBarTexture;
 
@@ -55,10 +59,11 @@ namespace Connecting
         int _iTimeToFruit;
         int _iTimeToPerson;
 
-        SpriteFont font;
-
+        SpriteFont helveticaSmall;
+        SpriteFont helveticaSmallItalic;
         SpriteFont helveticaMedium;
         SpriteFont helveticaLarge;
+        SpriteFont helveticaHuge;
 
         MouseState lastMouseState;
         KeyboardState lastKeyState;
@@ -110,9 +115,14 @@ namespace Connecting
             MusicState.LoadContent(Content);
             GameLogo.LoadContent(Content);
             GameLogoFull.LoadContent(Content);
-            font = Content.Load<SpriteFont>("fonts/Helvetica");
+            GameOverSplash.LoadContent(Content);
+            VictorySplash.LoadContent(Content);
+
+            helveticaSmall = Content.Load<SpriteFont>("fonts/HelveticaSmall");
+            helveticaSmallItalic = Content.Load<SpriteFont>("fonts/HelveticaSmallItalic");
             helveticaMedium = Content.Load<SpriteFont>("fonts/HelveticaMedium");
             helveticaLarge = Content.Load<SpriteFont>("fonts/HelveticaLarge");
+            helveticaHuge = Content.Load<SpriteFont>("fonts/HelveticaHuge");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
 
@@ -122,6 +132,8 @@ namespace Connecting
 
             loadPauseScreen();
             loadStartScreen();
+            loadGameOverScreen();
+            loadVictoryScreen();
         }
 
         private void loadPauseScreen()
@@ -132,6 +144,17 @@ namespace Connecting
         private void loadStartScreen()
         {
             s_GameManStart.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+        }
+
+        private void loadGameOverScreen()
+        {
+            //s_GameManGameOver.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+            s_GameManGameOver.AddObject(new GameOverSplash(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+        }
+
+        private void loadVictoryScreen()
+        {
+            s_GameManVictory.AddObject(new VictorySplash(new Vector2(GameBoundaries.Width / 2, 20.0f)));
         }
 
         private void loadNavBar() {
@@ -201,9 +224,22 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            if (_fGameMinutesElapsed >= 3.0f)
+            //if (_fGameMinutesElapsed >= 0.03f)
+            {
+                // A winner is you!
+                CurrentGameState = GameState.Victory;
+            }
+            else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
+            {
+                // Game Over
+                CurrentGameState = GameState.GameOver;
+            }
 
             if (CurrentGameState == GameState.Running)
             {
+                _fGameMinutesElapsed += (float)gameTime.ElapsedGameTime.TotalMinutes;
+
                 // Allows the game to exit
                 if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
                     || ((Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Q) || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.X)) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.LeftControl)))
@@ -236,19 +272,22 @@ namespace Connecting
             else
             {
                 KeyboardState keyState = Keyboard.GetState(PlayerIndex.One);
+                if (lastKeyState == null)
+                    lastKeyState = keyState;
+                Keys[] keysPressed = keyState.GetPressedKeys();
+
+                MouseState mouseState = Mouse.GetState();
+                Vector2 mouseLoc = new Vector2(mouseState.X, mouseState.Y);
+                if (lastMouseState == null)
+                    lastMouseState = mouseState;
                 switch (CurrentGameState)
                 {
                     case GameState.Paused:
-
-                        if (lastKeyState == null)
-                            lastKeyState = keyState;
 
                         if ((keyState.IsKeyDown(Keys.P) && !lastKeyState.IsKeyDown(Keys.P)) || (keyState.IsKeyDown(Keys.Escape) && !lastKeyState.IsKeyDown(Keys.Escape)))
                         {
                             Unpause();
                         }
-
-                        lastKeyState = keyState;
 
                         s_GameManPause.Update(gameTime);
 
@@ -258,16 +297,22 @@ namespace Connecting
                         break;
                     case GameState.Start:
 
-                        if (lastKeyState == null)
-                            lastKeyState = keyState;
-
-                        if ((keyState.IsKeyDown(Keys.Space) && !lastKeyState.IsKeyDown(Keys.Space)) || (keyState.IsKeyDown(Keys.Enter) && !lastKeyState.IsKeyDown(Keys.Enter)))
+                        // Keyboard
+                        //if ((keyState.IsKeyDown(Keys.Space) && !lastKeyState.IsKeyDown(Keys.Space)) || (keyState.IsKeyDown(Keys.Enter) && !lastKeyState.IsKeyDown(Keys.Enter)))
+                        //{
+                        //    CurrentGameState = GameState.Running;
+                        //}
+                        if (keysPressed.Count() > 0)
                         {
                             CurrentGameState = GameState.Running;
                             MusicState.Instance.Play();
                         }
 
-                        lastKeyState = keyState;
+                        // Mouse 
+                        if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
+                        {
+                            CurrentGameState = GameState.Running;
+                        }
 
                         s_GameManStart.Update(gameTime);
 
@@ -275,7 +320,54 @@ namespace Connecting
                         SoundState.Instance.ClearFinishedSounds(gameTime);
 
                         break;
+                    case GameState.GameOver:
+
+                        // Keyboard
+                        //if ((keyState.IsKeyDown(Keys.Space) && !lastKeyState.IsKeyDown(Keys.Space)) || (keyState.IsKeyDown(Keys.Enter) && !lastKeyState.IsKeyDown(Keys.Enter)))
+                        //{
+                        //    // Restart the game
+                        //    Restart();
+                        //}
+                        if (keysPressed.Count() > 0)
+                        {
+                            // Restart the game
+                            Restart();
+                        }
+
+                        // Mouse 
+                        if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
+                        {
+                            Restart();
+                        }
+
+                        s_GameManGameOver.Update(gameTime);
+
+                        base.Update(gameTime);
+                        SoundState.Instance.ClearFinishedSounds(gameTime);
+
+                        break;
+                    case GameState.Victory:
+                        if (keysPressed.Count() > 0)
+                        {
+                            // Restart the game
+                            Restart();
+                        }
+
+                        // Mouse 
+                        if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
+                        {
+                            Restart();
+                        }
+
+                        s_GameManVictory.Update(gameTime);
+
+                        base.Update(gameTime);
+                        SoundState.Instance.ClearFinishedSounds(gameTime);
+
+                        break;
                 }
+                lastKeyState = keyState;
+                lastMouseState = mouseState;
             }
         }
 
@@ -516,7 +608,10 @@ namespace Connecting
             else
             {
                 spriteBatch.Begin();
-                GraphicsDevice.Clear(Color.Gray);
+                //GraphicsDevice.Clear(Color.LightGray);
+                //GraphicsDevice.Clear(Color.LightSkyBlue);
+                Vector3 color = Color.LightCyan.ToVector3();
+                GraphicsDevice.Clear(new Color(color.X - 0.05f, color.Y - 0.05f, color.Z - 0.05f));
 
                 switch (CurrentGameState)
                 {
@@ -529,8 +624,12 @@ namespace Connecting
                         drawStartScreen(spriteBatch);
                         break;
                     case GameState.GameOver: // Top
+                        s_GameManGameOver.Draw(spriteBatch, gameTime);
+                        drawGameOverScreen(spriteBatch);
                         break;
                     case GameState.Victory: //Bottom
+                        s_GameManVictory.Draw(spriteBatch, gameTime);
+                        drawVictoryScreen(spriteBatch);
                         break;
                 }
                     
@@ -542,16 +641,26 @@ namespace Connecting
 
         private void drawPauseScreen(SpriteBatch spriteBatch)
         {
-            float x = helveticaLarge.MeasureString("Paused").X / 2;
-            spriteBatch.DrawString(helveticaLarge, "Paused", new Vector2(GameBoundaries.Width / 2 - x, 240.0f), Color.Black);
+            float x = helveticaHuge.MeasureString("Paused").X / 2;
+            spriteBatch.DrawString(helveticaHuge, "Paused", new Vector2(GameBoundaries.Width / 2 - x, 240.0f), Color.Black);
         }
 
         private void drawStartScreen(SpriteBatch spriteBatch)
         {
-            string message = "Press Enter to Start";
-            SpriteFont ourFont = helveticaLarge;
-            float x = ourFont.MeasureString(message).X / 2;
-            drawString(spriteBatch, ourFont, message, new Vector2(GameBoundaries.Width / 2 - x, 340.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to start", new Vector2(0.0f, 590.0f));
+            //drawStringHorizontallyCentered(spriteBatch, helveticaSmallItalic, "As long as we have each other, we'll never run out of problems", new Vector2(0.0f, 600.0f));
+        }
+
+        private void drawGameOverScreen(SpriteBatch spriteBatch)
+        {
+            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "Sorry to say it, but you let five of your Noms die!", new Vector2(0.0f, 240.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to continue", new Vector2(0.0f, 340.0f));
+        }
+
+        private void drawVictoryScreen(SpriteBatch spriteBatch)
+        {
+            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "The Hom shall continue to thrive", new Vector2(0.0f, 240.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to play again", new Vector2(0.0f, 340.0f));
         }
 
         private void drawString(SpriteBatch spriteBatch, SpriteFont font, string message, Vector2 location)
@@ -559,15 +668,26 @@ namespace Connecting
             spriteBatch.DrawString(font, message, location, Color.Black);
         }
 
+        private void drawStringHorizontallyCentered(SpriteBatch spriteBatch, SpriteFont font, string message, Vector2 location)
+        {
+            float x = font.MeasureString(message).X / 2;
+            location = new Vector2(GameBoundaries.Width/2 - x, location.Y);
+            spriteBatch.DrawString(font, message, location, Color.Black);
+        }
+
         private void drawNavBar()
         {
             spriteBatch.Draw(menuBarTexture, new Rectangle(0, GameBoundaries.Height, GameBoundaries.Width, 100), Color.White);
-            spriteBatch.DrawString(font, GameObjectManager.Instance.getDeadScore(), new Vector2(120.0f, 635.0f), Color.Black);
+            spriteBatch.DrawString(helveticaSmall, GameObjectManager.Instance.getDeadScore(), new Vector2(120.0f, 635.0f), Color.Black);
         }
 
         public void Restart()
         {
+            _fGameMinutesElapsed = 0.0f;
+
+            CurrentGameState = GameState.Start;
             GameObjectManager.Instance.Clear();
+            GameObjectManager.Instance.resetCountDead();
             spawnStartingObjects();
             loadNavBar();
         }
