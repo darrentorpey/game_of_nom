@@ -17,6 +17,9 @@ namespace Connecting
         private static SoundEffect[] s_NomSounds;
         private static SoundEffect s_PickUpSound;
 
+        // Used to record sound state for later return, such as going into and out of pause screen
+        private bool? _bOldSoundState;
+
         private struct SoundInfo
         {
             public int _iSoundIndex;
@@ -43,6 +46,29 @@ namespace Connecting
         public void ToggleSound()
         {
             _bSoundOn = !_bSoundOn;
+        }
+
+        public void SoundPause()
+        {
+            SoundOff(true);
+        }
+
+        public void SoundOff(bool recordOldState)
+        {
+            if (recordOldState)
+            {
+                _bOldSoundState = _bSoundOn;
+            }
+            _bSoundOn = false;
+        }
+
+        public void SoundResume()
+        {
+            if (_bOldSoundState != null)
+            {
+                _bSoundOn = (bool)_bOldSoundState;
+            } else
+                _bSoundOn = true;
         }
 
         public void PlayAngrySound(Person aPerson, GameTime aTime)

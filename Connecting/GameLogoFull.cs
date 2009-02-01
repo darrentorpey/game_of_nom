@@ -5,11 +5,11 @@ using Microsoft.Xna.Framework.Content;
 
 namespace Connecting
 {
-    class GameLogo : UIObject
+    class GameLogoFull : UIObject
     {
         static Texture2D s_MainTexture;
 
-        public GameLogo(Vector2 startLocation) : base(startLocation)
+        public GameLogoFull(Vector2 startLocation) : base(startLocation)
         {
             Location = startLocation;
         }
@@ -21,7 +21,7 @@ namespace Connecting
 
         public static void LoadContent(ContentManager aManager)
         {
-            s_MainTexture = aManager.Load<Texture2D>("gui/ui_logo_1");
+            s_MainTexture = aManager.Load<Texture2D>("gui/ui_start_1");
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)

@@ -35,7 +35,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helvetica.spritefont">
+    <Compile Include="fonts\Helvetica.spritefont">
       <Name>Helvetica</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
@@ -403,7 +403,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScoreFont.spritefont">
+    <Compile Include="fonts\ScoreFont.spritefont">
       <Name>ScoreFont</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
@@ -436,6 +436,47 @@
   <ItemGroup>
     <Compile Include="GUI\ui_logo_1.png">
       <Name>ui_logo_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fonts\HelveticaMedium.spritefont">
+      <Name>HelveticaMedium</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fonts\HelveticaLarge.spritefont">
+      <Name>HelveticaLarge</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GUI\ui_angel_empty_1.png">
+      <Name>ui_angel_empty_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\ui_angel_full_1.png">
+      <Name>ui_angel_full_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\ui_gameover_1.png">
+      <Name>ui_gameover_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\ui_start_1.png">
+      <Name>ui_start_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\ui_win_1.png">
+      <Name>ui_win_1</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
