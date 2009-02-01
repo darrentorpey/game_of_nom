@@ -61,6 +61,7 @@ namespace Connecting
             Person.LoadContent(Content);
             FoodSource.LoadContent(Content);
             DrawUtils.LoadContent(Content);
+            SoundState.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
             spawnStartingObjects();
@@ -80,12 +81,10 @@ namespace Connecting
             }
 
             // Init people here so that we know the content (textures, etc.) are loaded
-            GameObjectManager.Instance._Objects = new List<GameObject> {
-                _Flock
-            };
+            GameObjectManager.Instance.AddObject(_Flock);
 
             for (int i = 0; i < 10; ++i) {
-                GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(50), bounds));
+                GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
             }
 
             for (int i = 0; i < 5; ++i)
@@ -127,7 +126,7 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            processMouseEvents();
+            processMouseEvents(gameTime);
 
             processKeyboardEvents(gameTime);
 
@@ -160,13 +159,13 @@ namespace Connecting
         private void spawnFruit(FoodSource.Fruit fruitType)
         {
 
-            GameObjectManager.Instance._Objects.Add(new FoodSource(getRandomLocation(50), fruitType));
+            GameObjectManager.Instance.AddObject(new FoodSource(getRandomLocation(50), fruitType));
         }
 
         private void spawnPerson()
         {
             Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
-            GameObjectManager.Instance._Objects.Add(new Person(getRandomLocation(50), bounds));
+            GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
         }
 
         private void processKeyboardEvents(GameTime gameTime)
@@ -206,7 +205,7 @@ namespace Connecting
             lastKeyState = keyState;
         }
 
-        private void processMouseEvents()
+        private void processMouseEvents(GameTime aTime)
         {
             MouseState state = Mouse.GetState();
 
@@ -219,12 +218,13 @@ namespace Connecting
                 if (this.inTransitByUser == null)
                 {
                     GameObjectManager manager = GameObjectManager.Instance;
-                    for (int i = 0; i < manager._Objects.Count; ++i)
+                    for (int i = 0; i < manager.Count; ++i)
                     {
-                        if(manager._Objects[i].RadiusCheck(ref mouseLoc, 0.0f))
+                        if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                           this.inTransitByUser = manager._Objects[i];
-                           manager._Objects[i].Hold();
+                           this.inTransitByUser = manager[i];
+                           manager[i].Hold();
+                           SoundState.Instance.PlayPickupSound(aTime);
                         }
                     }
                 }
@@ -272,7 +272,7 @@ namespace Connecting
 
         public void Restart()
         {
-            GameObjectManager.Instance._Objects.Clear();
+            GameObjectManager.Instance.Clear();
             spawnStartingObjects();
         }
     }

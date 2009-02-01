@@ -84,6 +84,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SoundState.cs" />
     <Compile Include="FoodSource.cs" />
     <Compile Include="DrawUtils.cs" />
     <Compile Include="GameObject.cs" />
