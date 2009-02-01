@@ -5,12 +5,14 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using System.Diagnostics;
 
 namespace Connecting
 {
     public class FoodSource : GameObject
     {
         const int c_decayTime = 1500;
+        const int c_poofAnim = 1500;
 
         static Texture2D s_PoofTexture;
         static Texture2D[][] s_FruitTextureSets;
@@ -24,14 +26,18 @@ namespace Connecting
             Count = 3
         }
 
-        private int _ticksSinceSpawn = 0;
         private int _iEatDelay = 0;
+        private int _iSpawnDelay = c_poofAnim;
+
+        private GameObject _Eater;
         private bool _BeingEaten = false;
+        private bool _Dead = false;
 
         public bool NoStartAnimation = false;
-        public bool Dead = false;
-        public Fruit FruitType { get; set; }    
-        public bool BeingEaten { get { return _BeingEaten; } set { _BeingEaten = value; } }
+        public Fruit FruitType { get; set; }
+
+        public bool CanEat { get { return !_Dead && _Eater == null; } }
+        public GameObject Eater { get { return _Eater; } }
 
         public override float Radius { get { return 30.0f; } }
 
@@ -65,39 +71,56 @@ namespace Connecting
             FruitType = fruit;
         }
 
-        public override void Update(GameTime aTime)
+        public void StartEating(GameObject aEater)
         {
-            _ticksSinceSpawn++;
+            _Eater = aEater;
+        }
 
-            if (BeingEaten)
+        public void StopEating(GameObject aEater)
+        {
+            Debug.Assert(aEater == _Eater);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="?"></param>
+        /// <returns></returns>
+        public bool Eat(GameTime aTime)
+        {
+            if (_iEatDelay <= 0)
             {
-                if (_iEatDelay <= 0)
+                _iEatDelay = c_decayTime;
+                if (_AmountLeft == 1)
                 {
-                    _iEatDelay = c_decayTime;
-                    if (_AmountLeft == 1)
-                    {
-                        Dead = true;
-                        BeingEaten = false; // This location may be a bad idea
-                        SoundState.Instance.PlayNomSound(this, aTime);
-                        // Remove self from the game object manager
-                        GameObjectManager.Instance.RemoveObject(this);
-                    }
-                    else
-                    {
-                        SoundState.Instance.PlayNomSound(this, aTime);
-                        _AmountLeft--;
-                    }
+                    _Dead = true;
+                    SoundState.Instance.PlayNomSound(this, aTime);
+                    // Remove self from the game object manager
+                    GameObjectManager.Instance.RemoveObject(this);
                 }
                 else
-                    _iEatDelay -= aTime.ElapsedGameTime.Milliseconds;
+                {
+                    SoundState.Instance.PlayNomSound(this, aTime);
+                    _AmountLeft--;
+                }
             }
+            else
+                _iEatDelay -= aTime.ElapsedGameTime.Milliseconds;
+
+            return !_Dead;
+        }
+
+        public override void Update(GameTime aTime)
+        {
+            if (_iSpawnDelay > 0)
+                _iSpawnDelay -= aTime.ElapsedGameTime.Milliseconds;
         }
 
         public override void Draw(SpriteBatch aBatch, GameTime aTime)
         {
             Vector2 draw_loc = new Vector2(Location.X - (float)(s_FruitTextureSets[(int)FruitType][0].Width / 2), Location.Y - (float)(s_FruitTextureSets[(int)FruitType][0].Height / 2));
             Texture2D textureToDraw;
-            if (_ticksSinceSpawn < 35 && aTime.TotalGameTime.TotalSeconds > 2 && !NoStartAnimation)
+            if (_iSpawnDelay > 0 && !NoStartAnimation)
             {
                 textureToDraw = s_PoofTexture;
             }

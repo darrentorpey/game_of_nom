@@ -70,7 +70,6 @@ namespace Connecting
             FoodSource.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
-            SoundState.Instance.ToggleSound();
             font = Content.Load<SpriteFont>("Helvetica");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
@@ -260,12 +259,6 @@ namespace Connecting
                         }
                     }
                 }
-            }
-
-            if (state.RightButton == ButtonState.Pressed && 
-                lastMouseState.RightButton != ButtonState.Pressed)
-            {
-                _Flock.AddExtenralForce(new ExternalForce(mouseLoc, 600.0f, 3.0f, 120));
             }
 
             if (this.inTransitByUser != null)

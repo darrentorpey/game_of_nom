@@ -91,6 +91,11 @@ namespace Connecting
         public override void Hold()
         {
             _eMyState = State.Held;
+            if (EatingObject != null)
+            {
+                EatingObject.StopEating(this);
+                EatingObject = null;
+            }
         }
 
         public override void Drop()
@@ -110,10 +115,13 @@ namespace Connecting
                 _fCurrentRadius = Math.Max(fdistCoM, _fCurrentRadius);
                 _People[i].Update(aTime);
 
-                float fdist;
-                Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
-                if (fdist > 15.0f * _People.Count)
-                    RemoveFromFlock(_People[i]);
+                if (_eMyState != State.Held)
+                {
+                    float fdist;
+                    Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
+                    if (fdist > 15.0f * _People.Count)
+                        RemovePerson(_People[i]);
+                }
             }
 
             for (int i = 0; i < _ExternalForces.Count; ++i)
@@ -129,8 +137,9 @@ namespace Connecting
                 case State.Held:
                     break;
                 case State.Eating:
-                    if (EatingObject.Dead)
+                    if(!EatingObject.Eat(aTime))
                     {
+                        EatingObject.StopEating(this);
                         EatingObject = null;
                         _eMyState = State.Normal;
                     }
@@ -226,16 +235,13 @@ namespace Connecting
                 if (this != currObj)
                 {
                     if (currObj.CollidesWith(this))
-                    {
                         _CollidingObject = currObj;
-                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
-                        {
-                            _NearbyFoodSources.Push((FoodSource)currObj);
-                        }
-                    }
-                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+
+                    if(currObj is FoodSource)
                     {
-                        _NearbyFoodSources.Push((FoodSource)currObj);
+                        FoodSource mySource = (FoodSource)currObj;
+                        if(mySource.CanEat && mySource.InProximity(this, FOOD_PROXIMITY))
+                            _NearbyFoodSources.Push((FoodSource)currObj);
                     }
                 }
             }
@@ -245,7 +251,7 @@ namespace Connecting
         {
             if (_NearbyFoodSources.Count > 0)
             {
-                _NearbyFoodSources.First().BeingEaten = true;
+                _NearbyFoodSources.First().StartEating(this);
                 EatingObject = _NearbyFoodSources.First();
                 _eMyState = State.Eating;
             }

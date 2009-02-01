@@ -125,6 +125,11 @@ namespace Connecting
         public override void Hold()
         {
             _eMyState = State.Held;
+            if (EatingObject != null)
+            {
+                EatingObject.StopEating(this);
+                EatingObject = null;
+            }
         }
 
         public override void Drop()
@@ -149,26 +154,25 @@ namespace Connecting
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
                     manager.AddObject(flock);
+
+                    if (_CollidingObject.EatingObject != null)
+                    {
+                        _CollidingObject.EatingObject.StopEating(_CollidingObject);
+                        _CollidingObject.EatingObject = null;
+                        //_CollidingObject._eMyState = State.Alone;
+                    }
                 }
 
                 _CollidingObject = null;
             }
-
-            if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
-            {
-                EatingObject.BeingEaten = false;
-                EatingObject = null;
-            }
-
-            startEatingIfPossible();
         }
 
         private void startEatingIfPossible()
         {
-            if (_NearbyFoodSources.Count > 0)
+            if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.First().CanEat)
             {
-                _NearbyFoodSources.First().BeingEaten = true;
                 EatingObject = _NearbyFoodSources.First();
+                EatingObject.StartEating(this);
                 _eMyState = State.Eating;
             }
         }
@@ -177,13 +181,6 @@ namespace Connecting
         {
             updateHunger();
             updateAllNearby();
-
-            if (_eMyState == State.Eating && EatingObject.Dead)
-            {
-                EatingObject = null;
-                _eMyState = State.Alone;
-                _eMyAloneState = AloneState.StandingStill;
-            }
 
             switch(_eMyState)
             {
@@ -196,6 +193,12 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Eating:
+                    if (EatingObject != null && !EatingObject.Eat(aTime))
+                    {
+                        EatingObject.StopEating(this);
+                        EatingObject = null;
+                        _eMyState = State.Alone;
+                    }
                     MyMood = getMood();
                     break;
                 case State.Flocking:
@@ -297,11 +300,11 @@ namespace Connecting
                             if (Location.Y < _Bounds.Y || Location.Y > _Bounds.Y + _Bounds.Height)
                                 _WalkVelocity.Y = -_WalkVelocity.Y;
 
-                            startEatingIfPossible();
-
                             MyMood = getMood();
                             break;
                     }
+                    startEatingIfPossible();
+
                     break;
                 case State.Held:
                     MyHoverMood = getMood();
@@ -327,16 +330,13 @@ namespace Connecting
                 if (this != currObj)
                 {
                     if (currObj.CollidesWith(this))
-                    {
                         _CollidingObject = currObj;
-                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
-                        {
-                            _NearbyFoodSources.Push((FoodSource)currObj);
-                        }
-                    }
-                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+
+                    if (currObj is FoodSource)
                     {
-                        _NearbyFoodSources.Push((FoodSource)currObj);
+                        FoodSource mySource = (FoodSource)currObj;
+                        if (mySource.CanEat && mySource.InProximity(this, FOOD_PROXIMITY))
+                            _NearbyFoodSources.Push((FoodSource)currObj);
                     }
                 }
             }
