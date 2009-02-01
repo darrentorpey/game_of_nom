@@ -157,7 +157,7 @@ namespace Connecting
                     _eMyState = State.Limbo;
                     ((Person)_CollidingObject)._eMyState = State.Limbo;
 
-                    PersonFlock flock = new PersonFlock();
+                    PersonFlock flock = new PersonFlock(this.Location);
                     flock.AddPerson(this);
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
@@ -209,6 +209,12 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Flocking:
+                    const float c_fForceSensitivity = 0.0f;
+                    const float c_fCalmingForce = 200.0f;
+                    const float c_fHungerFactor = 50.0f;
+                    const float c_fExplosionTollerange = 500.0f;
+                    const float c_fExplositionForceMul = 1.3f;
+
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
 
@@ -229,10 +235,10 @@ namespace Connecting
 
                     // When you're flocking, you're sensitive to other people.
                     // Use the avoidance force as a basis
-                    _fSensitivity += _Forces[2].Length() * .5f;
+                    _fSensitivity += _Forces[2].Length() * c_fForceSensitivity;
                     
                     // Reduce sensitivity depending on the number of people in my flock    
-                    float dec = (1.0f / (float)ParentFlock.Count) * 200.0f;
+                    float dec = (1.0f / (float)(ParentFlock.Count + _Hunger / c_fHungerFactor)) * c_fCalmingForce;
                     _fSensitivity -= dec;
                     if (_fSensitivity < 0)
                         _fSensitivity = 0.0f;
@@ -243,10 +249,11 @@ namespace Connecting
                     if(myOldMood != MyMood && MyMood == Mood.Angry)
                         SoundState.Instance.PlayAngrySound(this, aTime);
 
-                    if (_fSensitivity > 400.0f)
+                    if (_fSensitivity > c_fExplosionTollerange)
                     {
                         // EXPLODE!
-                        ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 600.0f, 3.0f, 120));
+                        ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 
+                            ParentFlock.Count * c_fExplositionForceMul, 3.0f, 120));
                         ParentFlock.RemovePerson(this);
                         SoundState.Instance.PlayExplosionSound(aTime);
 
@@ -403,6 +410,11 @@ namespace Connecting
                     break;
                 case State.Flocking:
                     {
+                        const float c_fAgitatedLowTolerance = 30.0f;
+                        const float c_fAgitatedHighTolerance = 100.0f;
+                        const float c_fAngryLowTolerance = 60.0f;
+                        const float c_fAngryHighTolerance = 200.0f;
+
                         retMood = MyMood;
                         Mood hungerMood = getHungerMood();
                         if (hungerMood != Mood.Neutral)
@@ -416,7 +428,7 @@ namespace Connecting
                             case Mood.Confused:
                             case Mood.Eating:
                                 retMood = ParentFlock.GetMood();
-                                if (_fSensitivity > 50.0f)
+                                if (_fSensitivity > c_fAgitatedHighTolerance)
                                     retMood = Mood.Agitated;
                                 break;
                             // But when I'm sad, hungry or angry, I want my mood
@@ -427,13 +439,13 @@ namespace Connecting
                                     retMood = flockMood;
                                 break;
                             case Mood.Agitated:
-                                if (_fSensitivity < 20.0f)
+                                if (_fSensitivity < c_fAgitatedLowTolerance)
                                     retMood = Mood.Happy;
-                                else if (_fSensitivity > 120.0f)
+                                else if (_fSensitivity > c_fAngryHighTolerance)
                                     retMood = Mood.Angry;
                                 break;
                             case Mood.Angry:
-                                if (_fSensitivity < 40.0f)
+                                if (_fSensitivity < c_fAngryLowTolerance)
                                     retMood = Mood.Agitated;
                                 break;
                         }
@@ -492,10 +504,13 @@ namespace Connecting
                 _Forces[4] = ParentFlock.GetExternalForces(this);
 
                 // Always move toward CoM.  Pull harder if farther away.
-                _Forces[0] = GetForceToward(ParentFlock.CurrentCoM, .2f, Radius * ParentFlock.Count);
+                _Forces[0] = GetForceToward(ParentFlock.Location, .2f, Radius * ParentFlock.Count);
                 
                 // Always move toward Target location
-                _Forces[1] = GetForceToward(ParentFlock.Location, .3f, 2.5f);
+                // This force becomes smaller as the group becomes larger.
+                float fflockFactor = ParentFlock.Count * .15f;
+                _Forces[1] = GetForceToward(ParentFlock.TargetLocation, .3f, 2.5f);
+                _Forces[1] /= ParentFlock.Count;
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;

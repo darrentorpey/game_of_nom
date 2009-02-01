@@ -38,7 +38,7 @@ namespace Connecting
         KeyboardState lastKeyState;
 
         bool _bSingleStep = false;
-        bool _bPrintDebugInfo = false;
+        bool _bPrintDebugInfo = true;
 
         public GameOfNom()
         {
@@ -344,7 +344,8 @@ namespace Connecting
             {
                 int x = (int)Math.Max(this.inTransitByUser.Radius, Math.Min(mouseLoc.X, GameBoundaries.Width - this.inTransitByUser.Radius));
                 int y = (int)Math.Max(this.inTransitByUser.Radius, Math.Min(mouseLoc.Y, GameBoundaries.Height - this.inTransitByUser.Radius));
-                this.inTransitByUser.Location = new Vector2(x, y);
+                Vector2 loc = new Vector2(x, y);
+                this.inTransitByUser.MoveTo(ref loc);
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Released)

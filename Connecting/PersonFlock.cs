@@ -42,6 +42,8 @@ namespace Connecting
         private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
 
+        private Vector2 _TargetLocation;
+
         private GameObject _CollidingObject = null;
         private float _fCurrentRadius = 0.0f;
         private Vector2 _CurrentCenterOfMass = Vector2.Zero;
@@ -54,9 +56,9 @@ namespace Connecting
             get { return _fCurrentRadius; }
         }
 
-        public Vector2 CurrentCoM
+        public Vector2 TargetLocation
         {
-            get { return _CurrentCenterOfMass; }
+            get { return _TargetLocation; }
         }
 
         public Person this[int aiVal]
@@ -74,9 +76,9 @@ namespace Connecting
             get { return _eMyState; }
         }
 
-        public PersonFlock()
+        public PersonFlock(Vector2 aTargetLocation)
         {
-
+            _TargetLocation = aTargetLocation;
         }
 
         public void AddPerson(Person aPerson)
@@ -105,11 +107,17 @@ namespace Connecting
             startEatingIfPossible();
         }
 
+        public override void MoveTo(ref Vector2 aLocation)
+        {
+            _TargetLocation = aLocation;
+        }
+
         public override void Update(GameTime aTime)
         {
             _fCurrentRadius = 0.0f;
 
             _CurrentCenterOfMass = CalculateCenterOfMass();
+            Location = _CurrentCenterOfMass;
             for (int i = 0; i < _People.Count; ++i)
             {
                 float fdistCoM = Vector2.Distance(_CurrentCenterOfMass, _People[i].Location) + _People[i].Radius;
@@ -120,7 +128,7 @@ namespace Connecting
                 {
                     float fdist;
                     Vector2.Distance(ref _People[i].Location, ref _CurrentCenterOfMass, out fdist);
-                    if (fdist > 15.0f * _People.Count)
+                    if (fdist > 25.0f * _People.Count)
                         RemovePerson(_People[i]);
                 }
             }
@@ -132,7 +140,16 @@ namespace Connecting
                     _ExternalForces.RemoveAt(i);
             }
 
+            // Flocks can move on their own accord.  Stop eating if we're too far away from
+            // our food source.
+            if (EatingObject != null && !this.InProximity(EatingObject, FOOD_PROXIMITY))
+            {
+                EatingObject.StopEating(this);
+                EatingObject = null;
+                _eMyState = State.Normal;
+            }
             updateAllNearby();
+
             switch (_eMyState)
             {
                 case State.Held:
@@ -184,7 +201,8 @@ namespace Connecting
             for(int i = 0; i < _People.Count; ++i)
                 _People[i].Draw(aBatch, aTime);
 
-            DrawUtils.DrawPoint(aBatch, Location, 5, Color.Tomato);
+            DrawUtils.DrawPoint(aBatch, _TargetLocation, 5, Color.Tomato);
+            DrawUtils.DrawPoint(aBatch, Location, 5, Color.Green);
         }
 
         public void AddExtenralForce(ExternalForce aForce)
