@@ -13,9 +13,11 @@ namespace Connecting
     {
         const int c_decayTime = 1500;
         const int c_poofAnim = 1500;
+        const int c_nomAnim = 600;
 
         static Texture2D s_PoofTexture;
         static Texture2D[][] s_FruitTextureSets;
+        static Texture2D[] s_NomTextures;
 
         public enum Fruit
         {
@@ -27,6 +29,8 @@ namespace Connecting
         }
 
         private int _iEatDelay = 0;
+        private int _iNextNomAnim = 0;
+        private int _iNomAnimFrame = 0;
         private int _iSpawnDelay = c_poofAnim;
 
         private GameObject _Eater;
@@ -130,7 +134,23 @@ namespace Connecting
             {
                 textureToDraw = s_FruitTextureSets[(int)FruitType][_AmountLeft - 1];
             }
+
             aBatch.Draw(textureToDraw, draw_loc, Color.White);
+
+            if(_Eater != null)
+            {
+                if(_iNextNomAnim <=0)
+                {
+                    _iNextNomAnim = c_nomAnim;
+                    _iNomAnimFrame++;
+                    if(_iNomAnimFrame == s_NomTextures.Length)
+                        _iNomAnimFrame = 0;
+                }
+                else
+                    _iNextNomAnim -= aTime.ElapsedGameTime.Milliseconds;
+
+                aBatch.Draw(s_NomTextures[_iNomAnimFrame], draw_loc, Color.White);
+            }
         }
 
         public override string GetDebugInfo()
@@ -155,7 +175,10 @@ namespace Connecting
             }
 
             s_PoofTexture = aManager.Load<Texture2D>("food/food_poof_1");
+            s_NomTextures = new Texture2D[] {
+                aManager.Load<Texture2D>("food/eating_nom_1"),
+                aManager.Load<Texture2D>("food/eating_nom_2")
+            };
         }
-
     }
 }

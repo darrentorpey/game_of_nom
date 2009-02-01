@@ -111,8 +111,7 @@ namespace Connecting
             Location = aStartLocation;
             _Bounds = aBounds;
 
-            _Velocity = new Vector2((float)RandomInstance.Instance.NextDouble(), 
-                (float)RandomInstance.Instance.NextDouble());
+            _Velocity = Vector2.Zero;
         }
 
         public void AddedToFlock(PersonFlock aFlock)
@@ -130,6 +129,7 @@ namespace Connecting
         public override void Hold()
         {
             _eMyState = State.Held;
+            _Velocity = Vector2.Zero;
             if (EatingObject != null)
             {
                 EatingObject.StopEating(this);
