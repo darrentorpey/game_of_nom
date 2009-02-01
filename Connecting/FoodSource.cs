@@ -12,12 +12,7 @@ namespace Connecting
     {
         const int c_decayTime = 1500;
 
-        int _iEatDelay = 0;
-
-        public bool Dead = false;
-
         static Texture2D s_PoofTexture;
-
         static Texture2D[][] s_FruitTextureSets;
 
         public enum Fruit
@@ -28,12 +23,12 @@ namespace Connecting
             Count = 2
         }
 
-        int _ticksSinceSpawn = 0;
-
-        public Fruit FruitType { get; set; }
-
+        private int _ticksSinceSpawn = 0;
+        private int _iEatDelay = 0;
         private bool _BeingEaten = false;
 
+        public bool Dead = false;
+        public Fruit FruitType { get; set; }    
         public bool BeingEaten { get { return _BeingEaten; } set { _BeingEaten = value; } }
 
         public override float Radius { get { return 30.0f; } }

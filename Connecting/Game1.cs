@@ -195,6 +195,8 @@ namespace Connecting
             }
             if (keyState.IsKeyDown(Keys.Back) && !lastKeyState.IsKeyDown(Keys.Back))
                 SoundState.Instance.ToggleSound();
+            if (keyState.IsKeyDown(Keys.Tab) && !lastKeyState.IsKeyDown(Keys.Tab))
+                _bSingleStep = !_bSingleStep;
 
             if (_bSingleStep)
             {

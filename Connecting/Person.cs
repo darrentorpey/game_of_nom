@@ -143,9 +143,6 @@ namespace Connecting
                 _CollidingObject = null;
             }
 
-            // I thought this was needed, but so far it isn't
-            MyMood = getMood();
-
             if (EatingObject != null && !EatingObject.InProximity(this, FOOD_PROXIMITY))
             {
                 EatingObject.BeingEaten = false;
@@ -168,6 +165,7 @@ namespace Connecting
         public override void Update(GameTime aTime)
         {
             updateHunger();
+            updateAllNearby();
 
             if (ParentFlock != null)
                 _eMyState = State.Flocking;
@@ -182,7 +180,6 @@ namespace Connecting
             switch(_eMyState)
             {
                 case State.Dead:
-                    Console.WriteLine("dead");
                     MyMood = getMood();
                     break;
                 case State.Eating:
@@ -192,53 +189,46 @@ namespace Connecting
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);
 
-                    // Look in the direction we're being dragged.
-                    Vector2 moving = Location - ParentFlock.Location;
-                    MyLook = moving.X < 0 ? LookDirection.Right : LookDirection.Left;
+                    Vector2 moving;
+                    switch (ParentFlock.FlockState)
+                    {
+                        case PersonFlock.State.Held:
+                            // Look in the direction we're being dragged.
+                            moving = Location - ParentFlock.Location;
+                            MyLook = moving.X < 0 ? LookDirection.Right : LookDirection.Left;
+                            break;
+                        case PersonFlock.State.Eating:
+                            // Look at what we're eating
+                            moving = Location - ParentFlock.EatingObject.Location;
+                            MyLook = moving.X < 0 ? LookDirection.Right : LookDirection.Left;
+                            break;
+                    }
 
                     // When you're flocking, you're sensitive to other people.
                     // Use the avoidance force as a basis
                     _fSensitivity += _Forces[2].Length() * .5f;
                     
-                    // Reduce sensitivity depending on the number of people in my flock
+                    // Reduce sensitivity depending on the number of people in my flock    
                     float dec = (1.0f / (float)ParentFlock.Count) * 200.0f;
                     _fSensitivity -= dec;
                     if (_fSensitivity < 0)
                         _fSensitivity = 0.0f;
-                    switch (MyMood)
-                    {
-                        // Happy to Sad if sensitivity is too high
-                        case Mood.Excited:
-                            MyMood = Mood.Happy; 
-                            break;
-                        case Mood.Happy:
-                            if (_fSensitivity > 50.0f)
-                                MyMood = Mood.Sad;
-                            break;
-                        // If sensitivity drops below 10, then we can go back to happy.
-                        case Mood.Sad:
-                            if (_fSensitivity < 20.0f)
-                                MyMood = Mood.Happy;
-                            else if (_fSensitivity > 120.0f)
-                            {
-                                SoundState.Instance.PlayAngrySound(this, aTime);
-                                MyMood = Mood.Angry;
-                            }
-                            break;
-                        case Mood.Angry:
-                            if (_fSensitivity < 40.0f)
-                                MyMood = Mood.Sad;
-                            if (_fSensitivity > 400.0f)
-                            {
-                                // EXPLODE!
-                                ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 600.0f, 3.0f, 120));
-                                ParentFlock.RemovePerson(this);
-                                SoundState.Instance.PlayExplosionSound(aTime);
 
-                                MyMood = Mood.Sad;
-                                _eMyState = State.Alone;
-                            }
-                            break;
+                    Mood myOldMood = MyMood;
+                    MyMood = getMood();
+                    
+                    if(myOldMood != MyMood && MyMood == Mood.Angry)
+                        SoundState.Instance.PlayAngrySound(this, aTime);
+
+                    if (_fSensitivity > 400.0f)
+                    {
+                        // EXPLODE!
+                        ParentFlock.AddExtenralForce(new ExternalForce(this.Location, 600.0f, 3.0f, 120));
+                        ParentFlock.RemovePerson(this);
+                        SoundState.Instance.PlayExplosionSound(aTime);
+
+                        MyMood = Mood.Sad;
+                        _eMyState = State.Alone;
                     }
                     break;
                 case State.Alone:
@@ -251,8 +241,6 @@ namespace Connecting
                     }
                     else
                         _iNextThink -= aTime.ElapsedGameTime.Milliseconds;
-
-                    MyHoverMood = getMood();
 
                     switch (_eMyAloneState)
                     {
@@ -308,35 +296,12 @@ namespace Connecting
             }
         }
 
-        private void updateHunger()
+        private void updateAllNearby()
         {
-            _Hunger += 1;
-
-            if (_eMyState == State.Eating)
-            {
-                _Hunger -= 2;
-            }
-
-            if (_Hunger > (int)HungerLevel.Dead)
-            {
-                // R.I.P.
-                _eMyState = State.Dead;
-            }
-        }
-
-        private Mood getMood()
-        {
-            if (_eMyState == State.Dead)
-            {
-                return Mood.Dead;
-            }
-
             _NearbyFoodSources.Clear();
-
-            GameObjectManager manager = GameObjectManager.Instance;
-
-            // Look to see if we need to indicate that droping this Person will change their mood
             _CollidingObject = null;
+            
+            GameObjectManager manager = GameObjectManager.Instance;
             for (int i = 0; i < manager.Count; ++i)
             {
                 GameObject currObj = manager[i];
@@ -356,45 +321,100 @@ namespace Connecting
                     }
                 }
             }
+        }
 
-            if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
-                // If we're colliding with a person, we're happy (we're very social!)
-                        //if (_eMyState == State.Alone
-                return Mood.Excited;
-            }
-            else if (_NearbyFoodSources.Count != 0)
+        private void updateHunger()
+        {
+            _Hunger += 1;
+
+            if (_eMyState == State.Eating ||
+                (_eMyState == State.Flocking && ParentFlock.FlockState == PersonFlock.State.Eating))
             {
-                if (EatingObject != null)
-                {
-                    // Yay we're eating! nom nom nom ^_^
-                    return Mood.Eating;
-                }
-                else
-                {
-                    // If we're near available food, we're happy
-                    return Mood.Excited;
-                }
+                _Hunger -= 2;
             }
-            else
+
+            if (_Hunger > (int)HungerLevel.Dead)
             {
-                if (_Hunger > (int)HungerLevel.Starving)
-                {
-                    // Hungry!
-                    return Mood.Starving;
-                }
-                else
-                {
-                    // If we're alone and wandering or looking around
-                    if(_eMyState == State.Alone && 
-                        (_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering))
-                    {
-                        return Mood.Confused;
+                // R.I.P.
+                _eMyState = State.Dead;
+            }
+        }
+
+        private Mood getMood()
+        {
+            Mood retMood = Mood.Sad;
+
+            GameObjectManager manager = GameObjectManager.Instance;
+
+            switch (_eMyState)
+            {
+                case State.Dead:
+                    retMood = Mood.Dead;
+                    break;
+                case State.Alone:
+                    if (_Hunger > (int)HungerLevel.Starving) {
+                        // Hungry!
+                        retMood = Mood.Starving;
                     }
-                        
-                    // Otherwise, that makes us a SAD PANDA
-                    return Mood.Sad;
-                }
+                    else if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
+                        retMood = Mood.Confused;
+                    }
+                    else
+                        retMood = Mood.Sad;
+                    break;
+                case State.Flocking:
+                    retMood = MyMood;
+                    if (_Hunger > (int)HungerLevel.Starving)
+                        retMood = Mood.Starving;
+                    else
+                    {
+                        switch (MyMood)
+                        {
+                            // Mostly, I want the flock's mood
+                            case Mood.Excited:
+                            case Mood.Happy:
+                            case Mood.Confused:
+                            case Mood.Eating:
+                                retMood = ParentFlock.GetMood();
+                                if (_fSensitivity > 50.0f)
+                                    retMood = Mood.Sad;
+                                break;
+                            // But when I'm sad, hungry or angry, I want my mood
+                            case Mood.Hungry:
+                            case Mood.Starving:
+                            case Mood.Sad:
+                                if (_fSensitivity < 20.0f)
+                                    retMood = Mood.Happy;
+                                else if (_fSensitivity > 120.0f)
+                                    retMood = Mood.Angry;
+                                break;
+                            case Mood.Angry:
+                                if (_fSensitivity < 40.0f)
+                                    retMood = Mood.Sad;
+                                break;
+                        }
+                    }
+                    break;
+
+                case State.Eating:
+                    retMood = Mood.Eating;
+                    break;
+
+                case State.Held:
+                    // Look to see if we need to indicate that droping this Person will change their mood
+                    if (_CollidingObject != null && (_CollidingObject is Person || _CollidingObject is PersonFlock)) {
+                        // If we're colliding with a person, we're happy (we're very social!)
+                        retMood = Mood.Excited;
+                    }
+                    else if(_NearbyFoodSources.Count != 0) {
+                        retMood = Mood.Excited;
+                    }
+                    else
+                        goto case State.Alone;
+                    break;
             }
+
+            return retMood;
         }
 
         private void AccumulateForces()

@@ -26,13 +26,26 @@ namespace Connecting
 
     public class PersonFlock : GameObject
     {
+        const float FOOD_PROXIMITY = 10.0f;
+
+        public enum State
+        {
+            Held,
+            Normal,
+            Eating
+        }
+
         private List<Person> _People = new List<Person>();
         private List<Person> _AddPeople = new List<Person>();
         private List<Person> _RemovePeople = new List<Person>();
 
+        private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
+
         private float _fCurrentRadius = 0.0f;
         private Vector2 _CurrentCenterOfMass = Vector2.Zero;
+
+        private State _eMyState = State.Normal;
 
         public override float Radius
         {
@@ -54,6 +67,11 @@ namespace Connecting
             get { return _People.Count; }
         }
 
+        public State FlockState
+        {
+            get { return _eMyState; }
+        }
+
         public PersonFlock()
         {
 
@@ -71,12 +89,13 @@ namespace Connecting
 
         public override void Hold()
         {
-            
+            _eMyState = State.Held;
         }
 
         public override void Drop()
         {
-            
+            _eMyState = State.Normal;
+            startEatingIfPossible();
         }
 
         public override void Update(GameTime aTime)
@@ -101,6 +120,23 @@ namespace Connecting
                 _ExternalForces[i].iLifeLeft -= aTime.ElapsedGameTime.Milliseconds;
                 if (_ExternalForces[i].iLifeLeft <= 0)
                     _ExternalForces.RemoveAt(i);
+            }
+
+            updateAllNearby();
+            switch (_eMyState)
+            {
+                case State.Held:
+                    break;
+                case State.Eating:
+                    if (EatingObject.Dead)
+                    {
+                        EatingObject = null;
+                        _eMyState = State.Normal;
+                    }
+                    break;
+                case State.Normal:
+                    startEatingIfPossible();
+                    break;
             }
 
             for (int i = 0; i < _AddPeople.Count; ++i)
@@ -145,6 +181,60 @@ namespace Connecting
             }
 
             return force;
+        }
+
+        public Person.Mood GetMood()
+        {
+            Person.Mood retMood = Person.Mood.Happy;
+            switch (_eMyState)
+            {
+                case State.Held:
+                    if (_NearbyFoodSources.Count > 0)
+                    {
+                        retMood = Person.Mood.Excited;
+                    }
+                    break;
+                case State.Eating:
+                    retMood = Person.Mood.Eating;
+                    break;
+            }
+
+            return retMood;
+        }
+
+        private void updateAllNearby()
+        {
+            _NearbyFoodSources.Clear();
+            
+            GameObjectManager manager = GameObjectManager.Instance;
+            for (int i = 0; i < manager.Count; ++i)
+            {
+                GameObject currObj = manager[i];
+                if (this != currObj)
+                {
+                    if (currObj.CollidesWith(this))
+                    {
+                        if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
+                        {
+                            _NearbyFoodSources.Push((FoodSource)currObj);
+                        }
+                    }
+                    else if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj) && currObj.InProximity(this, FOOD_PROXIMITY))
+                    {
+                        _NearbyFoodSources.Push((FoodSource)currObj);
+                    }
+                }
+            }
+        }
+
+        private void startEatingIfPossible()
+        {
+            if (_NearbyFoodSources.Count > 0)
+            {
+                _NearbyFoodSources.First().BeingEaten = true;
+                EatingObject = _NearbyFoodSources.First();
+                _eMyState = State.Eating;
+            }
         }
 
         private void AddToFlock(Person aPerson)
