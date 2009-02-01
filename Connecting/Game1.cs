@@ -688,7 +688,7 @@ namespace Connecting
             float buttonLegendStartY = 620.0f;
             float buttonLegendStartX = 735.0f;
             drawString(spriteBatch, helveticaTiny, "[m] - Toggle Music", new Vector2(buttonLegendStartX, buttonLegendStartY));
-            drawString(spriteBatch, helveticaTiny, "[m] - Toggle Restart", new Vector2(buttonLegendStartX, buttonLegendStartY + 22.0f));
+            drawString(spriteBatch, helveticaTiny, "[r] - Toggle Restart", new Vector2(buttonLegendStartX, buttonLegendStartY + 22.0f));
             drawString(spriteBatch, helveticaTiny, "[p] - Pause", new Vector2(buttonLegendStartX, buttonLegendStartY + 44.0f));
 
             //drawStringHorizontallyCentered(spriteBatch, helveticaSmallItalic, "As long as we have each other, we'll never run out of problems", new Vector2(0.0f, 600.0f));
@@ -701,7 +701,7 @@ namespace Connecting
         }
 
         private void drawVictoryScreen(SpriteBatch spriteBatch)
-        {
+        { 
             drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "The Hom shall continue to thrive", new Vector2(0.0f, 240.0f));
             drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to play again", new Vector2(0.0f, 340.0f));
         }

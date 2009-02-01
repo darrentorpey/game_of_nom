@@ -215,7 +215,7 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Flocking:
-                    const float c_fForceSensitivity = .6f;
+                    const float c_fForceSensitivity = .8f;
                     const float c_fCalmingForce = 100.0f;
                     const float c_fHungerFactor = 80.0f;
                     const float c_fExplosionTollerange = 250.0f;
