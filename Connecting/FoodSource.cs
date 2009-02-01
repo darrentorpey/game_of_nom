@@ -19,8 +19,9 @@ namespace Connecting
         {
             Grapes = 0,
             Orange = 1,
+            Banana = 2,
 
-            Count = 2
+            Count = 3
         }
 
         private int _ticksSinceSpawn = 0;
@@ -120,6 +121,7 @@ namespace Connecting
             {
                 s_FruitTextureSets[(int)Fruit.Grapes][i] = aManager.Load<Texture2D>("food/food_grapes_" + i);
                 s_FruitTextureSets[(int)Fruit.Orange][i] = aManager.Load<Texture2D>("food/food_orange_" + i);
+                s_FruitTextureSets[(int)Fruit.Banana][i] = aManager.Load<Texture2D>("food/food_banana_" + i);
             }
 
             s_PoofTexture = aManager.Load<Texture2D>("food/food_poof_1");
