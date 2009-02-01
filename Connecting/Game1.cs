@@ -16,7 +16,7 @@ namespace Connecting
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Microsoft.Xna.Framework.Game
+    public class GameOfNom : Microsoft.Xna.Framework.Game
     {
         public static int GAME_HEIGHT = 600;
         public static int GAME_WIDTH = 900;
@@ -40,7 +40,7 @@ namespace Connecting
         bool _bSingleStep = false;
         bool _bPrintDebugInfo = false;
 
-        public Game1()
+        public GameOfNom()
         {
             this.IsMouseVisible = true;
 
@@ -79,6 +79,7 @@ namespace Connecting
             Tombstone.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
+            GameLogo.LoadContent(Content);
             font = Content.Load<SpriteFont>("Helvetica");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
@@ -91,6 +92,7 @@ namespace Connecting
         private void loadNavBar(SpriteBatch spriteBatch)
         {
             GameObjectManager.Instance.AddObject(new Angel(new Vector2(100.0f, 650.0f), true));
+            GameObjectManager.Instance.AddObject(new GameLogo(new Vector2(100.0f, 650.0f)));
         }
 
         private void spawnStartingObjects()
@@ -386,6 +388,7 @@ namespace Connecting
         {
             GameObjectManager.Instance.Clear();
             spawnStartingObjects();
+            loadNavBar(spriteBatch);
         }
     }
 }

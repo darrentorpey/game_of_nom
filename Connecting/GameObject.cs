@@ -47,8 +47,9 @@ namespace Connecting
 
         public FoodSource EatingObject;
 
-        public abstract void Hold();
-        public abstract void Drop();
+        public virtual void Hold() {}
+
+        public virtual void Drop() {}
 
         public virtual string GetDebugInfo() {
             return "";
