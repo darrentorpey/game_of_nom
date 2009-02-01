@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -179,9 +178,9 @@ namespace Connecting
             // Can't be going rediculously fast
             if (_Velocity.Length() < 50.0f)
             {
-                if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.First().CanEat)
+                if (_NearbyFoodSources.Count > 0 && _NearbyFoodSources.Peek().CanEat)
                 {
-                    EatingObject = _NearbyFoodSources.First();
+                    EatingObject = _NearbyFoodSources.Peek();
                     EatingObject.StartEating(this);
                     _eMyState = State.Eating;
                 }
@@ -201,6 +200,8 @@ namespace Connecting
                         // I was flocking, now I'm dead, remove me from the flock.
                         ParentFlock.RemovePerson(this);
                     }
+                    if (EatingObject != null)
+                        Debug.Assert(true); // WTF!?
                     MyMood = getMood();
                     break;
                 case State.Eating:
@@ -219,6 +220,12 @@ namespace Connecting
                     const float c_fHungerFactor = 50.0f;
                     const float c_fExplosionTollerange = 250.0f;
                     const float c_fExplositionForceMul = 100.0f;
+
+                    if (EatingObject != null)
+                    {
+                        EatingObject.StopEating(this);
+                        EatingObject = null;
+                    }
 
                     AccumulateForces();
                     Location = Location + (_Velocity * (float)aTime.ElapsedGameTime.TotalSeconds);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -161,7 +160,7 @@ namespace Connecting
         public static void LoadContent(ContentManager aManager)
         {
             s_FruitTextureSets = new Texture2D[(int)Fruit.Count][];
-            for (int i = 0; i < s_FruitTextureSets.Count(); ++i)
+            for (int i = 0; i < s_FruitTextureSets.Length; ++i)
             {
                 s_FruitTextureSets[i] = new Texture2D[s_Capacity];
             }
