@@ -35,8 +35,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="fonts\Helvetica.spritefont">
-      <Name>Helvetica</Name>
+    <Compile Include="fonts\HelveticaSmall.spritefont">
+      <Name>HelveticaSmall</Name>
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
     </Compile>
@@ -479,6 +479,20 @@
       <Name>ui_win_1</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fonts\HelveticaHuge.spritefont">
+      <Name>HelveticaHuge</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fonts\HelveticaSmallItalic.spritefont">
+      <Name>HelveticaSmallItalic</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\v3.0\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
