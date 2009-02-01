@@ -159,11 +159,6 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
-    <Compile Include="people_sad_1.png">
-      <Name>people_sad_1</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
     <Compile Include="people_surprise_1.png">
       <Name>people_surprise_1</Name>
       <Importer>TextureImporter</Importer>
@@ -389,6 +384,20 @@
   <ItemGroup>
     <Compile Include="people_neutral_1.png">
       <Name>people_neutral_1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="people_eating_2.png">
+      <Name>people_eating_2</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="people_agitated_1.png">
+      <Name>people_agitated_1</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>

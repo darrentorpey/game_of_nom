@@ -17,12 +17,14 @@ namespace Connecting
         const int c_iRandDelay = 420;
         const int c_iLookTime = 2000;
         const int c_iLookDelay = 400;
+        const int c_iAnimTime = 700;
+        const int c_iAnimDelay = 200;
         const float FOOD_PROXIMITY = 10.0f;
 
         public enum Mood
         {
             Happy = 0,
-            Sad = 1,
+            Agitated = 1,
             Angry = 2,
             Confused = 3,
             Excited = 4,
@@ -69,11 +71,13 @@ namespace Connecting
 
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
+        private static Texture2D[] s_EatingFrames;
+
         private static Color[] _ForceColors = new Color[] {
             Color.Red, Color.Black, Color.Green, Color.Blue, Color.Pink
         };
                 
-        private Mood MyMood = Mood.Sad;
+        private Mood MyMood = Mood.Neutral;
         private Mood? MyHoverMood = null;
         private LookDirection MyLook = LookDirection.Left;
         
@@ -86,6 +90,8 @@ namespace Connecting
         private Rectangle _Bounds;
         private int _iNextThink = 0;
         private int _iNextLook = 0;
+        private int _iNextEat = 0;
+        private int _iEatingFrame = 0;
         private float _fSensitivity = 0.0f;
         private Vector2 _WalkVelocity = Vector2.Zero;
 
@@ -234,7 +240,7 @@ namespace Connecting
                         ParentFlock.RemovePerson(this);
                         SoundState.Instance.PlayExplosionSound(aTime);
 
-                        MyMood = Mood.Sad;
+                        MyMood = Mood.Surprise;
                         _eMyState = State.Alone;
                     }
                     break;
@@ -357,7 +363,7 @@ namespace Connecting
 
         private Mood getMood()
         {
-            Mood retMood = Mood.Sad;
+            Mood retMood = Mood.Neutral;
 
             GameObjectManager manager = GameObjectManager.Instance;
 
@@ -369,14 +375,17 @@ namespace Connecting
                 case State.Alone:
                     {
                         Mood hungerMood = getHungerMood();
-                        if(hungerMood == Mood.Neutral)
+                        if (hungerMood == Mood.Neutral)
                         {
-                            if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
+                            if (_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering)
+                            {
                                 retMood = Mood.Confused;
                             }
                             else
                                 retMood = Mood.Neutral;
                         }
+                        else
+                            retMood = hungerMood;
                     }
                     break;
                 case State.Flocking:
@@ -395,7 +404,7 @@ namespace Connecting
                             case Mood.Eating:
                                 retMood = ParentFlock.GetMood();
                                 if (_fSensitivity > 50.0f)
-                                    retMood = Mood.Sad;
+                                    retMood = Mood.Agitated;
                                 break;
                             // But when I'm sad, hungry or angry, I want my mood
                             case Mood.Hungry:
@@ -404,7 +413,7 @@ namespace Connecting
                                 if (flockMood == Mood.Excited || flockMood == Mood.Eating)
                                     retMood = flockMood;
                                 break;
-                            case Mood.Sad:
+                            case Mood.Agitated:
                                 if (_fSensitivity < 20.0f)
                                     retMood = Mood.Happy;
                                 else if (_fSensitivity > 120.0f)
@@ -412,7 +421,7 @@ namespace Connecting
                                 break;
                             case Mood.Angry:
                                 if (_fSensitivity < 40.0f)
-                                    retMood = Mood.Sad;
+                                    retMood = Mood.Agitated;
                                 break;
                         }
                     }
@@ -492,23 +501,24 @@ namespace Connecting
                     }
                 }
                 
-                GameObjectManager manager = GameObjectManager.Instance;
-                for (int i = 0; i < manager.Count; ++i)
-                {
-                    if (manager[i] == this || manager[i] == ParentFlock)
-                        continue;
+                // This was way too much avoidance.  It looked cool though.
+                //GameObjectManager manager = GameObjectManager.Instance;
+                //for (int i = 0; i < manager.Count; ++i)
+                //{
+                //    if (manager[i] == this || manager[i] == ParentFlock)
+                //        continue;
 
-                    float dist;
-                    Vector2.Distance(ref manager[i].Location, ref this.Location, out dist);
-                    if (dist < 40.0f)
-                    {
-                        Vector2 force = (this.Location - manager[i].Location);
-                        externalAvoidanceForce += (force * .5f);
-                    }
-                }
+                //    float dist;
+                //    Vector2.Distance(ref manager[i].Location, ref this.Location, out dist);
+                //    if (dist < 40.0f)
+                //    {
+                //        Vector2 force = (this.Location - manager[i].Location);
+                //        externalAvoidanceForce += (force * .5f);
+                //    }
+                //}
 
                 _Forces[2] = avoidanceForce;
-                _Forces[3] = externalAvoidanceForce;
+                // _Forces[3] = externalAvoidanceForce;
 
                 for (int i = 0; i < 5; ++i)
                     forces += _Forces[i];
@@ -552,6 +562,21 @@ namespace Connecting
             {
                 mood_texture = s_MoodTextures[(int)MyHoverMood];
             }
+            else if (MyMood == Mood.Eating)
+            {
+                if (_iNextEat <= 0)
+                {
+                    _iNextEat = c_iAnimTime + RandomInstance.Instance.Next(-c_iAnimDelay, c_iAnimDelay);
+                    _iEatingFrame++;
+
+                    if (_iEatingFrame == s_EatingFrames.Length)
+                        _iEatingFrame = 0;
+                }
+                else
+                    _iNextEat -= aTime.ElapsedGameTime.Milliseconds;
+                
+                mood_texture = s_EatingFrames[_iEatingFrame];
+            }
             else
             {
                 mood_texture = s_MoodTextures[(int)MyMood];
@@ -575,6 +600,10 @@ namespace Connecting
             for (int i = 0; i < (int)Mood.Count; ++i)
                 s_MoodTextures[i] = aManager.Load<Texture2D>("people_" + ((Mood)i).ToString() + "_1");
 
+            s_EatingFrames = new Texture2D[] {
+                aManager.Load<Texture2D>("people_eating_1"),
+                aManager.Load<Texture2D>("people_eating_2")
+            };
             s_HeldTexture = aManager.Load<Texture2D>("selection_halo_1");
         }
     }

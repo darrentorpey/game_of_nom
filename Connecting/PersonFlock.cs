@@ -42,6 +42,7 @@ namespace Connecting
         private Stack<FoodSource> _NearbyFoodSources = new Stack<FoodSource>();
         private List<ExternalForce> _ExternalForces = new List<ExternalForce>();
 
+        private GameObject _CollidingObject = null;
         private float _fCurrentRadius = 0.0f;
         private Vector2 _CurrentCenterOfMass = Vector2.Zero;
 
@@ -135,6 +136,17 @@ namespace Connecting
                     }
                     break;
                 case State.Normal:
+                    if (_CollidingObject is PersonFlock)
+                    {
+                        // Add all of us into them.
+                        PersonFlock theFlock = ((PersonFlock)_CollidingObject);
+                        for (int i = 0; i < _People.Count; ++i)
+                        {
+                            RemovePerson(_People[i]);
+                            theFlock.AddPerson(_People[i]);
+                        }
+                    }
+                    _CollidingObject = null;
                     startEatingIfPossible();
                     break;
             }
@@ -205,6 +217,7 @@ namespace Connecting
         private void updateAllNearby()
         {
             _NearbyFoodSources.Clear();
+            _CollidingObject = null;
             
             GameObjectManager manager = GameObjectManager.Instance;
             for (int i = 0; i < manager.Count; ++i)
@@ -214,6 +227,7 @@ namespace Connecting
                 {
                     if (currObj.CollidesWith(this))
                     {
+                        _CollidingObject = currObj;
                         if (currObj is FoodSource && (!((FoodSource)(currObj)).BeingEaten || this.EatingObject == currObj))
                         {
                             _NearbyFoodSources.Push((FoodSource)currObj);
