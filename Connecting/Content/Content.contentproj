@@ -222,51 +222,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="sound\Angry_Blob_01.wav">
-      <Name>Angry_Blob_01</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Angry_Blob_02.wav">
-      <Name>Angry_Blob_02</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Angry_Blob_03.wav">
-      <Name>Angry_Blob_03</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Angry_Blob_04.wav">
-      <Name>Angry_Blob_04</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Angry_Disperse_01.wav">
-      <Name>Angry_Disperse_01</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Angry_Disperse_02.wav">
-      <Name>Angry_Disperse_02</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Eating_01.wav">
-      <Name>Eating_01</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Eating_02.wav">
-      <Name>Eating_02</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
-    <Compile Include="sound\Eating_03.wav">
-      <Name>Eating_03</Name>
-      <Importer>WavImporter</Importer>
-      <Processor>SoundEffectProcessor</Processor>
-    </Compile>
     <Compile Include="sound\Food_Disappear.wav">
       <Name>Food_Disappear</Name>
       <Importer>WavImporter</Importer>
@@ -284,6 +239,88 @@
     </Compile>
     <Compile Include="sound\Pickup.wav">
       <Name>Pickup</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="sound\Burst_01.wav">
+      <Name>Burst_01</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Burst_02.wav">
+      <Name>Burst_02</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_01.wav">
+      <Name>Eat_01</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_02.wav">
+      <Name>Eat_02</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_03.wav">
+      <Name>Eat_03</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_04.wav">
+      <Name>Eat_04</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_05.wav">
+      <Name>Eat_05</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Eat_06.wav">
+      <Name>Eat_06</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_01.wav">
+      <Name>Grumble_01</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_02.wav">
+      <Name>Grumble_02</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_03.wav">
+      <Name>Grumble_03</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_04.wav">
+      <Name>Grumble_04</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_05.wav">
+      <Name>Grumble_05</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_06.wav">
+      <Name>Grumble_06</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_07.wav">
+      <Name>Grumble_07</Name>
+      <Importer>WavImporter</Importer>
+      <Processor>SoundEffectProcessor</Processor>
+    </Compile>
+    <Compile Include="sound\Grumble_08.wav">
+      <Name>Grumble_08</Name>
       <Importer>WavImporter</Importer>
       <Processor>SoundEffectProcessor</Processor>
     </Compile>

@@ -126,7 +126,7 @@ namespace Connecting
                 || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            processMouseEvents();
+            processMouseEvents(gameTime);
 
             processKeyboardEvents(gameTime);
 
@@ -205,7 +205,7 @@ namespace Connecting
             lastKeyState = keyState;
         }
 
-        private void processMouseEvents()
+        private void processMouseEvents(GameTime aTime)
         {
             MouseState state = Mouse.GetState();
 
@@ -224,6 +224,7 @@ namespace Connecting
                         {
                            this.inTransitByUser = manager[i];
                            manager[i].Hold();
+                           SoundState.Instance.PlayPickupSound(aTime);
                         }
                     }
                 }

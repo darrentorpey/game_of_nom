@@ -15,16 +15,19 @@ namespace Connecting
         private static SoundEffect[] s_AngrySounds;
         private static SoundEffect[] s_ExplodeSounds;
         private static SoundEffect[] s_NomSounds;
+        private static SoundEffect s_PickUpSound;
 
         private struct SoundInfo
         {
             public int _iSoundIndex;
             public int _iLastPlayTime;
+            public int _iDelay;
         }
 
         private Dictionary<Person, SoundInfo> _AngrySoundMap = new Dictionary<Person,SoundInfo>();
         private Dictionary<FoodSource, SoundInfo> _NomSoundMap = new Dictionary<FoodSource, SoundInfo>();
         private SoundInfo[] _ExplodeSounds = new SoundInfo[3];
+        private SoundInfo _PickupSound;
 
         public static SoundState Instance
         {
@@ -91,33 +94,52 @@ namespace Connecting
             }
         }
 
+        public void PlayPickupSound(GameTime aTime)
+        {
+            if (IsSoundFinished(ref _PickupSound, s_PickUpSound, aTime))
+            {
+                _PickupSound._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds; ;
+                _PickupSound._iDelay = 200;
+                s_PickUpSound.Play();
+            }                
+        }
+
         private static bool IsSoundFinished(ref SoundInfo aInfo, SoundEffect aEffect, GameTime aTime)
         {
             if(aInfo._iLastPlayTime == 0)
                 return true;
-            int ifinishedTime = aInfo._iLastPlayTime + (int)aEffect.Duration.TotalMilliseconds;
+            int ifinishedTime = aInfo._iLastPlayTime + (int)aEffect.Duration.TotalMilliseconds + aInfo._iDelay;
             return ifinishedTime < aTime.TotalGameTime.TotalMilliseconds;
         }
 
         public static void LoadContent(ContentManager aContent)
         {
             s_AngrySounds = new SoundEffect[] {
-                aContent.Load<SoundEffect>("sound/Angry_Blob_01"),
-                aContent.Load<SoundEffect>("sound/Angry_Blob_02"),
-                aContent.Load<SoundEffect>("sound/Angry_Blob_03"),
-                aContent.Load<SoundEffect>("sound/Angry_Blob_04")
+                aContent.Load<SoundEffect>("sound/Grumble_01"),
+                aContent.Load<SoundEffect>("sound/Grumble_02"),
+                aContent.Load<SoundEffect>("sound/Grumble_03"),
+                aContent.Load<SoundEffect>("sound/Grumble_04"),
+                aContent.Load<SoundEffect>("sound/Grumble_05"),
+                aContent.Load<SoundEffect>("sound/Grumble_06"),
+                aContent.Load<SoundEffect>("sound/Grumble_07"),
+                aContent.Load<SoundEffect>("sound/Grumble_08"),
             };
 
             s_ExplodeSounds = new SoundEffect[] {
-                aContent.Load<SoundEffect>("sound/Angry_Disperse_01"),
-                aContent.Load<SoundEffect>("sound/Angry_Disperse_02")
+                aContent.Load<SoundEffect>("sound/Burst_01"),
+                aContent.Load<SoundEffect>("sound/Burst_02")
             };
 
             s_NomSounds = new SoundEffect[] {
-                aContent.Load<SoundEffect>("sound/Eating_01"),
-                aContent.Load<SoundEffect>("sound/Eating_02"),
-                aContent.Load<SoundEffect>("sound/Eating_03")
+                aContent.Load<SoundEffect>("sound/Eat_01"),
+                aContent.Load<SoundEffect>("sound/Eat_02"),
+                aContent.Load<SoundEffect>("sound/Eat_03"),
+                aContent.Load<SoundEffect>("sound/Eat_04"),
+                aContent.Load<SoundEffect>("sound/Eat_05"),
+                aContent.Load<SoundEffect>("sound/Eat_06")
             };
+
+            s_PickUpSound = aContent.Load<SoundEffect>("sound/Pickup");
         }
     }
 }
