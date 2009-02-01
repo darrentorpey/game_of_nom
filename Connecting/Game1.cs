@@ -702,7 +702,7 @@ namespace Connecting
 
         private void drawVictoryScreen(SpriteBatch spriteBatch)
         {
-            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "The Hom shall continue to thrive", new Vector2(0.0f, 240.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "The Nom shall continue to thrive!", new Vector2(0.0f, 240.0f));
             drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to play again", new Vector2(0.0f, 340.0f));
         }
 
