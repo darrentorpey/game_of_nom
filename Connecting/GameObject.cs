@@ -13,8 +13,8 @@ namespace Connecting
 
         public abstract float Radius { get; }
 
-        public int _Hunger = 0;
-        public int Hunger { get { return _Hunger; } }
+        public float _Hunger = 0;
+        public float Hunger { get { return _Hunger; } }
 
         public bool RadiusCheck(ref Vector2 aPoint, float afRadius)
         {
@@ -47,8 +47,9 @@ namespace Connecting
 
         public FoodSource EatingObject;
 
-        public abstract void Hold();
-        public abstract void Drop();
+        public virtual void Hold() {}
+
+        public virtual void Drop() {}
 
         public virtual string GetDebugInfo() {
             return "";

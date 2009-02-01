@@ -16,31 +16,58 @@ namespace Connecting
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class Game1 : Microsoft.Xna.Framework.Game
+    public class GameOfNom : Microsoft.Xna.Framework.Game
     {
+        public static int c_iStartFruitSpawnRate = 4000;
+        public static int c_iFruitSpawnRateIncrease = 1000;
+        public static int c_iFruitSpawnIncreaseEvery = 3;
+        public static int c_iSwitchSongOnXObjects = 8;
+
         public static int GAME_HEIGHT = 600;
         public static int GAME_WIDTH = 900;
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+        private static GameObjectManager s_GameManPause = new GameObjectManager();
+        private static GameObjectManager s_GameManStart = new GameObjectManager();
+        private static GameObjectManager s_GameManGameOver = new GameObjectManager();
+        private static GameObjectManager s_GameManVictory = new GameObjectManager();
+
         Texture2D menuBarTexture;
+
+        public enum GameState
+        {
+            Running = 0,
+            Start = 1,
+            Paused = 2,
+            Help = 3,
+            Victory = 4,
+            GameOver = 5
+        }
+
+        public GameState CurrentGameState { get; set; }
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
 
-        int _iFruitSpawnRate = 3000;
+        int _iFruitSpawnRate = c_iStartFruitSpawnRate;
         int _iPersonSpawnRate = 12000;
+        int _iFruitSpawns;
         int _iTimeToFruit;
         int _iTimeToPerson;
 
         SpriteFont font;
+
+        SpriteFont helveticaMedium;
+        SpriteFont helveticaLarge;
+
         MouseState lastMouseState;
         KeyboardState lastKeyState;
 
         bool _bSingleStep = false;
         bool _bPrintDebugInfo = true;
 
-        public Game1()
+        public GameOfNom()
         {
             this.IsMouseVisible = true;
 
@@ -48,6 +75,8 @@ namespace Connecting
             graphics.PreferredBackBufferWidth = GameBoundaries.Width;
             graphics.PreferredBackBufferHeight = GameBoundaries.Height + 100;
             Content.RootDirectory = "Content";
+
+            CurrentGameState = GameState.Start;
 
             _iTimeToFruit = _iFruitSpawnRate;
             _iTimeToPerson = _iPersonSpawnRate;
@@ -80,19 +109,35 @@ namespace Connecting
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
             MusicState.LoadContent(Content);
-            MusicState.Instance.Play();
-            font = Content.Load<SpriteFont>("Helvetica");
+            GameLogo.LoadContent(Content);
+            GameLogoFull.LoadContent(Content);
+            font = Content.Load<SpriteFont>("fonts/Helvetica");
+            helveticaMedium = Content.Load<SpriteFont>("fonts/HelveticaMedium");
+            helveticaLarge = Content.Load<SpriteFont>("fonts/HelveticaLarge");
 
             menuBarTexture = Content.Load<Texture2D>("menu_bar");
 
             spawnStartingObjects();
 
-            loadNavBar(spriteBatch);
+            loadNavBar();
+
+            loadPauseScreen();
+            loadStartScreen();
         }
 
-        private void loadNavBar(SpriteBatch spriteBatch)
+        private void loadPauseScreen()
         {
+            s_GameManPause.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+        }
+
+        private void loadStartScreen()
+        {
+            s_GameManStart.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+        }
+
+        private void loadNavBar() {
             GameObjectManager.Instance.AddObject(new Angel(new Vector2(100.0f, 650.0f), true));
+            GameObjectManager.Instance.AddObject(new GameLogo(new Vector2(790.0f, 595.0f)));
         }
 
         private void spawnStartingObjects()
@@ -157,22 +202,82 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
-                || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Escape))
-                this.Exit();
 
-            processMouseEvents(gameTime);
+            if (CurrentGameState == GameState.Running)
+            {
+                // Allows the game to exit
+                if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed
+                    || ((Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.Q) || Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.X)) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.LeftControl)))
+                    this.Exit();
 
-            processKeyboardEvents(gameTime);
+                processMouseEvents(gameTime);
 
-            spawnMoreFood(gameTime);
-            //spawnMorePeople(gameTime);
+                processKeyboardEvents(gameTime);
 
-            SoundState.Instance.ClearFinishedSounds(gameTime);
+                spawnMoreFood(gameTime);
+                //spawnMorePeople(gameTime);
 
-            // TODO: Add your update logic here
-            base.Update(gameTime);
+                // Count relevant objects for music change
+                GameObjectManager manager = GameObjectManager.Instance;
+                int iobjectCount = 0;
+                for (int i = 0; i < manager.Count; ++i)
+                    if (manager[i].CanBeHeld)
+                        iobjectCount++;
+                if (iobjectCount >= c_iSwitchSongOnXObjects)
+                    MusicState.Instance.ActiveSong = 0;
+                else
+                    MusicState.Instance.ActiveSong = 1;
+
+                MusicState.Instance.Update(gameTime);
+
+                // TODO: Add your update logic here
+                base.Update(gameTime);
+                SoundState.Instance.ClearFinishedSounds(gameTime);
+            }
+            else
+            {
+                KeyboardState keyState = Keyboard.GetState(PlayerIndex.One);
+                switch (CurrentGameState)
+                {
+                    case GameState.Paused:
+
+                        if (lastKeyState == null)
+                            lastKeyState = keyState;
+
+                        if ((keyState.IsKeyDown(Keys.P) && !lastKeyState.IsKeyDown(Keys.P)) || (keyState.IsKeyDown(Keys.Escape) && !lastKeyState.IsKeyDown(Keys.Escape)))
+                        {
+                            Unpause();
+                        }
+
+                        lastKeyState = keyState;
+
+                        s_GameManPause.Update(gameTime);
+
+                        base.Update(gameTime);
+                        SoundState.Instance.ClearFinishedSounds(gameTime);
+
+                        break;
+                    case GameState.Start:
+
+                        if (lastKeyState == null)
+                            lastKeyState = keyState;
+
+                        if ((keyState.IsKeyDown(Keys.Space) && !lastKeyState.IsKeyDown(Keys.Space)) || (keyState.IsKeyDown(Keys.Enter) && !lastKeyState.IsKeyDown(Keys.Enter)))
+                        {
+                            CurrentGameState = GameState.Running;
+                            MusicState.Instance.Play();
+                        }
+
+                        lastKeyState = keyState;
+
+                        s_GameManStart.Update(gameTime);
+
+                        base.Update(gameTime);
+                        SoundState.Instance.ClearFinishedSounds(gameTime);
+
+                        break;
+                }
+            }
         }
 
         private void spawnMorePeople(GameTime aTime)
@@ -191,7 +296,14 @@ namespace Connecting
             if (_iTimeToFruit <= 0)
             {
                 spawnRandomFruit();
+                _iFruitSpawns++;
+                if (_iFruitSpawns == c_iFruitSpawnIncreaseEvery)
+                {
+                    _iFruitSpawns = 0;
+                    _iPersonSpawnRate += c_iFruitSpawnRateIncrease;
+                }
                 _iTimeToFruit = _iFruitSpawnRate;
+
             }
             else
                 _iTimeToFruit -= aTime.ElapsedGameTime.Milliseconds;
@@ -251,6 +363,11 @@ namespace Connecting
             if (lastKeyState == null)
                 lastKeyState = keyState;
 
+            if ((keyState.IsKeyDown(Keys.P) && !lastKeyState.IsKeyDown(Keys.P)) || (keyState.IsKeyDown(Keys.Escape) && !lastKeyState.IsKeyDown(Keys.Escape)))
+            {
+                Pause();
+            }
+
             if (keyState.IsKeyDown(Keys.R) && !lastKeyState.IsKeyDown(Keys.R))
             {
                 Restart();
@@ -290,12 +407,27 @@ namespace Connecting
             lastKeyState = keyState;
         }
 
+        private void Pause()
+        {
+            SoundState.Instance.SoundPause();
+            MusicState.Instance.Pause();
+            CurrentGameState = GameState.Paused;
+        }
+
+        private void Unpause()
+        {
+            SoundState.Instance.SoundResume();
+            MusicState.Instance.Play();
+            CurrentGameState = GameState.Running;
+        }
+
         private void processMouseEvents(GameTime aTime)
         {
             MouseState state = Mouse.GetState();
 
             if (lastMouseState == null)
                 lastMouseState = state;
+
             Vector2 mouseLoc = new Vector2(state.X, state.Y);
 
             if (state.LeftButton == ButtonState.Pressed)
@@ -368,17 +500,64 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.LightCyan);
+            if (CurrentGameState == GameState.Running)
+            {
+                GraphicsDevice.Clear(Color.LightCyan);
 
-            spriteBatch.Begin();
+                spriteBatch.Begin();
 
-            drawNavBar();
-            
-            GameObjectManager.Instance.Draw(spriteBatch, gameTime);
-            
-            spriteBatch.End();
+                drawNavBar();
 
-            base.Draw(gameTime);
+                GameObjectManager.Instance.Draw(spriteBatch, gameTime);
+
+                spriteBatch.End();
+
+                base.Draw(gameTime);
+            }
+            else
+            {
+                spriteBatch.Begin();
+                GraphicsDevice.Clear(Color.Gray);
+
+                switch (CurrentGameState)
+                {
+                    case GameState.Paused:
+                        s_GameManPause.Draw(spriteBatch, gameTime);
+                        drawPauseScreen(spriteBatch);
+                        break;
+                    case GameState.Start: // Right
+                        s_GameManStart.Draw(spriteBatch, gameTime);
+                        drawStartScreen(spriteBatch);
+                        break;
+                    case GameState.GameOver: // Top
+                        break;
+                    case GameState.Victory: //Bottom
+                        break;
+                }
+                    
+
+                spriteBatch.End();
+                base.Draw(gameTime);
+            }
+        }
+
+        private void drawPauseScreen(SpriteBatch spriteBatch)
+        {
+            float x = helveticaLarge.MeasureString("Paused").X / 2;
+            spriteBatch.DrawString(helveticaLarge, "Paused", new Vector2(GameBoundaries.Width / 2 - x, 240.0f), Color.Black);
+        }
+
+        private void drawStartScreen(SpriteBatch spriteBatch)
+        {
+            string message = "Press Enter to Start";
+            SpriteFont ourFont = helveticaLarge;
+            float x = ourFont.MeasureString(message).X / 2;
+            drawString(spriteBatch, ourFont, message, new Vector2(GameBoundaries.Width / 2 - x, 340.0f));
+        }
+
+        private void drawString(SpriteBatch spriteBatch, SpriteFont font, string message, Vector2 location)
+        {
+            spriteBatch.DrawString(font, message, location, Color.Black);
         }
 
         private void drawNavBar()
@@ -391,6 +570,7 @@ namespace Connecting
         {
             GameObjectManager.Instance.Clear();
             spawnStartingObjects();
+            loadNavBar();
         }
     }
 }
