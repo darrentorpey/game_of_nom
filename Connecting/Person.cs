@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Audio;
+using System.Diagnostics;
 
 namespace Connecting
 {
@@ -169,9 +170,6 @@ namespace Connecting
             updateHunger();
             updateAllNearby();
 
-            if (ParentFlock != null)
-                _eMyState = State.Flocking;
-
             if (_eMyState == State.Eating && EatingObject.Dead)
             {
                 EatingObject = null;
@@ -182,6 +180,11 @@ namespace Connecting
             switch(_eMyState)
             {
                 case State.Dead:
+                    if (ParentFlock != null)
+                    {
+                        // I was flocking, now I'm dead, remove me from the flock.
+                        ParentFlock.RemovePerson(this);
+                    }
                     MyMood = getMood();
                     break;
                 case State.Eating:
@@ -376,33 +379,34 @@ namespace Connecting
                     retMood = MyMood;
                     if (_Hunger > (int)HungerLevel.Starving)
                         retMood = Mood.Starving;
-                    else
+                    switch (retMood)
                     {
-                        switch (MyMood)
-                        {
-                            // Mostly, I want the flock's mood
-                            case Mood.Excited:
-                            case Mood.Happy:
-                            case Mood.Confused:
-                            case Mood.Eating:
-                                retMood = ParentFlock.GetMood();
-                                if (_fSensitivity > 50.0f)
-                                    retMood = Mood.Sad;
-                                break;
-                            // But when I'm sad, hungry or angry, I want my mood
-                            case Mood.Hungry:
-                            case Mood.Starving:
-                            case Mood.Sad:
-                                if (_fSensitivity < 20.0f)
-                                    retMood = Mood.Happy;
-                                else if (_fSensitivity > 120.0f)
-                                    retMood = Mood.Angry;
-                                break;
-                            case Mood.Angry:
-                                if (_fSensitivity < 40.0f)
-                                    retMood = Mood.Sad;
-                                break;
-                        }
+                        // Mostly, I want the flock's mood
+                        case Mood.Excited:
+                        case Mood.Happy:
+                        case Mood.Confused:
+                        case Mood.Eating:
+                            retMood = ParentFlock.GetMood();
+                            if (_fSensitivity > 50.0f)
+                                retMood = Mood.Sad;
+                            break;
+                        // But when I'm sad, hungry or angry, I want my mood
+                        case Mood.Hungry:
+                        case Mood.Starving:
+                            Mood flockMood = ParentFlock.GetMood();
+                            if (flockMood == Mood.Excited || flockMood == Mood.Eating)
+                                retMood = flockMood;
+                            break;
+                        case Mood.Sad:
+                            if (_fSensitivity < 20.0f)
+                                retMood = Mood.Happy;
+                            else if (_fSensitivity > 120.0f)
+                                retMood = Mood.Angry;
+                            break;
+                        case Mood.Angry:
+                            if (_fSensitivity < 40.0f)
+                                retMood = Mood.Sad;
+                            break;
                     }
                     break;
 
@@ -446,7 +450,7 @@ namespace Connecting
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;
-                Vector2 matchingForce = Vector2.Zero;
+                Vector2 externalAvoidanceForce = Vector2.Zero;
                 for (int i = 0; i < ParentFlock.Count; ++i)
                 {
                     if (ParentFlock[i] == this)
@@ -459,11 +463,25 @@ namespace Connecting
                         Vector2 force = (this.Location - ParentFlock[i].Location);
                         avoidanceForce += force;
                     }
-
-                    // Match velocity with other boids
-                    matchingForce += ParentFlock[i].Velocity;
                 }
+                
+                GameObjectManager manager = GameObjectManager.Instance;
+                for (int i = 0; i < manager.Count; ++i)
+                {
+                    if (manager[i] == this || manager[i] == ParentFlock)
+                        continue;
+
+                    float dist;
+                    Vector2.Distance(ref manager[i].Location, ref this.Location, out dist);
+                    if (dist < 40.0f)
+                    {
+                        Vector2 force = (this.Location - manager[i].Location);
+                        externalAvoidanceForce += force;
+                    }
+                }
+
                 _Forces[2] = avoidanceForce;
+                _Forces[3] = externalAvoidanceForce;
 
                 for (int i = 0; i < 5; ++i)
                     forces += _Forces[i];
