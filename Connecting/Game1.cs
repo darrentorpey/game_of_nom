@@ -18,15 +18,15 @@ namespace Connecting
     public class GameOfNom : Microsoft.Xna.Framework.Game
     {
         public static int c_iStartFruitSpawnRate = 4000;
-        public static int c_iFruitSpawnRateIncrease = 1000;
-        public static int c_iFruitSpawnIncreaseEvery = 3;
+        public static int c_iFruitSpawnRateIncrease = 750;
+        public static int c_iFruitSpawnIncreaseEvery = 5;
         public static int c_iSwitchSongOnXObjects = 8;
 
         public static int GAME_HEIGHT = 600;
         public static int GAME_WIDTH = 900;
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        private static int MAX_NOMS_DEAD = 5;
+        private static int MAX_NOMS_DEAD = 10;
 
         private static GameObjectManager s_GameManPause = new GameObjectManager();
         private static GameObjectManager s_GameManStart = new GameObjectManager();
