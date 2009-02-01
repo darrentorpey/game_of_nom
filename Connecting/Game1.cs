@@ -313,6 +313,7 @@ namespace Connecting
                         if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
                         {
                             CurrentGameState = GameState.Running;
+                            MusicState.Instance.Play();
                         }
 
                         s_GameManStart.Update(gameTime);
