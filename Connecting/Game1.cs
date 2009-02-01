@@ -26,7 +26,7 @@ namespace Connecting
         public static int GAME_WIDTH = 900;
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        private static int MAX_NOMS_DEAD = 5;
+        private static int MAX_NOMS_DEAD = 10;
 
         private static GameObjectManager s_GameManPause = new GameObjectManager();
         private static GameObjectManager s_GameManStart = new GameObjectManager();
@@ -34,7 +34,8 @@ namespace Connecting
         private static GameObjectManager s_GameManVictory = new GameObjectManager();
 
         private float _fGameMinutesElapsed = 0.0f;
-
+        private float _fTimeLastedLastTime = 0.0f;
+        
         Texture2D menuBarTexture;
 
         public enum GameState
@@ -59,6 +60,7 @@ namespace Connecting
         int _iTimeToFruit;
         int _iTimeToPerson;
 
+        SpriteFont helveticaTiny;
         SpriteFont helveticaSmall;
         SpriteFont helveticaSmallItalic;
         SpriteFont helveticaMedium;
@@ -117,7 +119,9 @@ namespace Connecting
             GameLogoFull.LoadContent(Content);
             GameOverSplash.LoadContent(Content);
             VictorySplash.LoadContent(Content);
+            Instruction.LoadContent(Content);
 
+            helveticaTiny = Content.Load<SpriteFont>("fonts/HelveticaTiny");
             helveticaSmall = Content.Load<SpriteFont>("fonts/HelveticaSmall");
             helveticaSmallItalic = Content.Load<SpriteFont>("fonts/HelveticaSmallItalic");
             helveticaMedium = Content.Load<SpriteFont>("fonts/HelveticaMedium");
@@ -143,7 +147,8 @@ namespace Connecting
 
         private void loadStartScreen()
         {
-            s_GameManStart.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 20.0f)));
+            s_GameManStart.AddObject(new GameLogoFull(new Vector2(GameBoundaries.Width / 2, 0.0f)));
+            s_GameManStart.AddObject(new Instruction(new Vector2(GameBoundaries.Width / 2, 240.0f)));
         }
 
         private void loadGameOverScreen()
@@ -229,12 +234,14 @@ namespace Connecting
             {
                 // A winner is you!
                 CurrentGameState = GameState.Victory;
+                _fTimeLastedLastTime = 1000.0f;
             }
             else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
             {
                 // Game Over
                 MusicState.Instance.Stop();
                 CurrentGameState = GameState.GameOver;
+                _fTimeLastedLastTime = _fGameMinutesElapsed;
             }
 
             if (CurrentGameState == GameState.Running)
@@ -603,6 +610,33 @@ namespace Connecting
 
                 GameObjectManager.Instance.Draw(spriteBatch, gameTime);
 
+                int totalMinutesPlayed = (int)_fGameMinutesElapsed;
+                int totalSecondsPlayed = (int)((_fGameMinutesElapsed - totalMinutesPlayed) * 60);
+
+                string timeElapsed = String.Format("Time Elapsed {0}:{1:00}", totalMinutesPlayed, totalSecondsPlayed);
+                drawString(spriteBatch, helveticaTiny, timeElapsed, new Vector2(180.0f, 635.0f));
+
+
+
+                GameObjectManager.Instance.Draw(spriteBatch, gameTime);
+
+                string timePart;
+                if (_fTimeLastedLastTime == 1000.0f)
+                {
+                    timePart = "You won";
+                }
+                else
+                {
+                    int totalMinutesPlayedLastTime = (int)_fTimeLastedLastTime;
+                    int totalSecondsPlayedLastTime = (int)((_fTimeLastedLastTime - totalMinutesPlayedLastTime) * 60);
+
+                    string timeElapsedLastTime = String.Format("{0}:{1:00}", totalMinutesPlayedLastTime, totalSecondsPlayedLastTime);
+                    timePart = timeElapsedLastTime;
+                }
+
+
+                drawString(spriteBatch, helveticaTiny, "Last time you lasted: " + timePart, new Vector2(180.0f, 660.0f));
+
                 spriteBatch.End();
 
                 base.Draw(gameTime);
@@ -649,13 +683,20 @@ namespace Connecting
 
         private void drawStartScreen(SpriteBatch spriteBatch)
         {
-            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to start", new Vector2(0.0f, 590.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "left-click or press any key to start", new Vector2(0.0f, 570.0f));
+
+            float buttonLegendStartY = 620.0f;
+            float buttonLegendStartX = 735.0f;
+            drawString(spriteBatch, helveticaTiny, "[m] - Toggle Music", new Vector2(buttonLegendStartX, buttonLegendStartY));
+            drawString(spriteBatch, helveticaTiny, "[m] - Toggle Restart", new Vector2(buttonLegendStartX, buttonLegendStartY + 22.0f));
+            drawString(spriteBatch, helveticaTiny, "[p] - Pause", new Vector2(buttonLegendStartX, buttonLegendStartY + 44.0f));
+
             //drawStringHorizontallyCentered(spriteBatch, helveticaSmallItalic, "As long as we have each other, we'll never run out of problems", new Vector2(0.0f, 600.0f));
         }
 
         private void drawGameOverScreen(SpriteBatch spriteBatch)
         {
-            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "Sorry to say it, but you let five of your Noms die!", new Vector2(0.0f, 240.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaMedium, "Sorry to say it, but you let ten of your Noms die!", new Vector2(0.0f, 240.0f));
             drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "Click or press any key to continue", new Vector2(0.0f, 340.0f));
         }
 
