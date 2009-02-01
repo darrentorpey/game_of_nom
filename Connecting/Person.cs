@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Audio;
+using System.Diagnostics;
 
 namespace Connecting
 {
@@ -16,12 +17,14 @@ namespace Connecting
         const int c_iRandDelay = 420;
         const int c_iLookTime = 2000;
         const int c_iLookDelay = 400;
+        const int c_iAnimTime = 700;
+        const int c_iAnimDelay = 200;
         const float FOOD_PROXIMITY = 10.0f;
 
         public enum Mood
         {
             Happy = 0,
-            Sad = 1,
+            Agitated = 1,
             Angry = 2,
             Confused = 3,
             Excited = 4,
@@ -68,11 +71,13 @@ namespace Connecting
 
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
+        private static Texture2D[] s_EatingFrames;
+
         private static Color[] _ForceColors = new Color[] {
             Color.Red, Color.Black, Color.Green, Color.Blue, Color.Pink
         };
                 
-        private Mood MyMood = Mood.Sad;
+        private Mood MyMood = Mood.Neutral;
         private Mood? MyHoverMood = null;
         private LookDirection MyLook = LookDirection.Left;
         
@@ -85,6 +90,8 @@ namespace Connecting
         private Rectangle _Bounds;
         private int _iNextThink = 0;
         private int _iNextLook = 0;
+        private int _iNextEat = 0;
+        private int _iEatingFrame = 0;
         private float _fSensitivity = 0.0f;
         private Vector2 _WalkVelocity = Vector2.Zero;
 
@@ -171,9 +178,6 @@ namespace Connecting
             updateHunger();
             updateAllNearby();
 
-            if (ParentFlock != null)
-                _eMyState = State.Flocking;
-
             if (_eMyState == State.Eating && EatingObject.Dead)
             {
                 EatingObject = null;
@@ -184,6 +188,11 @@ namespace Connecting
             switch(_eMyState)
             {
                 case State.Dead:
+                    if (ParentFlock != null)
+                    {
+                        // I was flocking, now I'm dead, remove me from the flock.
+                        ParentFlock.RemovePerson(this);
+                    }
                     MyMood = getMood();
                     break;
                 case State.Eating:
@@ -231,7 +240,7 @@ namespace Connecting
                         ParentFlock.RemovePerson(this);
                         SoundState.Instance.PlayExplosionSound(aTime);
 
-                        MyMood = Mood.Sad;
+                        MyMood = Mood.Surprise;
                         _eMyState = State.Alone;
                     }
                     break;
@@ -359,7 +368,7 @@ namespace Connecting
 
         private Mood getMood()
         {
-            Mood retMood = Mood.Sad;
+            Mood retMood = Mood.Neutral;
 
             GameObjectManager manager = GameObjectManager.Instance;
 
@@ -369,45 +378,47 @@ namespace Connecting
                     retMood = Mood.Dead;
                     break;
                 case State.Alone:
-                    if (_Hunger > (int)HungerLevel.Hungry) {
-                        if (_Hunger > (int)HungerLevel.Starving)
+                    {
+                        Mood hungerMood = getHungerMood();
+                        if (hungerMood == Mood.Neutral)
                         {
-                            // REALLY Hungry!
-                            retMood = Mood.Starving;
+                            if (_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering)
+                            {
+                                retMood = Mood.Confused;
+                            }
+                            else
+                                retMood = Mood.Neutral;
                         }
                         else
-                        {
-                            // Getting kinda hungry
-                            retMood = Mood.Sad;
-                        }
+                            retMood = hungerMood;
                     }
-                    else if(_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering) {
-                        retMood = Mood.Confused;
-                    }
-                    else
-                        retMood = Mood.Neutral;
                     break;
                 case State.Flocking:
-                    retMood = MyMood;
-                    if (_Hunger > (int)HungerLevel.Starving)
-                        retMood = Mood.Starving;
-                    else
                     {
-                        switch (MyMood)
+                        retMood = MyMood;
+                        Mood hungerMood = getHungerMood();
+                        if (hungerMood != Mood.Neutral)
+                            retMood = hungerMood;
+                        switch (retMood)
                         {
                             // Mostly, I want the flock's mood
                             case Mood.Excited:
+                            case Mood.Neutral:
                             case Mood.Happy:
                             case Mood.Confused:
                             case Mood.Eating:
                                 retMood = ParentFlock.GetMood();
                                 if (_fSensitivity > 50.0f)
-                                    retMood = Mood.Sad;
+                                    retMood = Mood.Agitated;
                                 break;
                             // But when I'm sad, hungry or angry, I want my mood
                             case Mood.Hungry:
                             case Mood.Starving:
-                            case Mood.Sad:
+                                Mood flockMood = ParentFlock.GetMood();
+                                if (flockMood == Mood.Excited || flockMood == Mood.Eating)
+                                    retMood = flockMood;
+                                break;
+                            case Mood.Agitated:
                                 if (_fSensitivity < 20.0f)
                                     retMood = Mood.Happy;
                                 else if (_fSensitivity > 120.0f)
@@ -415,12 +426,11 @@ namespace Connecting
                                 break;
                             case Mood.Angry:
                                 if (_fSensitivity < 40.0f)
-                                    retMood = Mood.Sad;
+                                    retMood = Mood.Agitated;
                                 break;
                         }
                     }
                     break;
-
                 case State.Eating:
                     retMood = Mood.Eating;
                     break;
@@ -437,6 +447,26 @@ namespace Connecting
                     else
                         goto case State.Alone;
                     break;
+            }
+
+            return retMood;
+        }
+
+        private Mood getHungerMood()
+        {
+            Mood retMood = Mood.Neutral;
+            if (_Hunger > (int)HungerLevel.Hungry)
+            {
+                if (_Hunger > (int)HungerLevel.Starving)
+                {
+                    // REALLY Hungry!
+                    retMood = Mood.Starving;
+                }
+                else
+                {
+                    // Getting kinda hungry
+                    retMood = Mood.Hungry;
+                }
             }
 
             return retMood;
@@ -461,7 +491,7 @@ namespace Connecting
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;
-                Vector2 matchingForce = Vector2.Zero;
+                Vector2 externalAvoidanceForce = Vector2.Zero;
                 for (int i = 0; i < ParentFlock.Count; ++i)
                 {
                     if (ParentFlock[i] == this)
@@ -474,11 +504,26 @@ namespace Connecting
                         Vector2 force = (this.Location - ParentFlock[i].Location);
                         avoidanceForce += force;
                     }
-
-                    // Match velocity with other boids
-                    matchingForce += ParentFlock[i].Velocity;
                 }
+                
+                // This was way too much avoidance.  It looked cool though.
+                //GameObjectManager manager = GameObjectManager.Instance;
+                //for (int i = 0; i < manager.Count; ++i)
+                //{
+                //    if (manager[i] == this || manager[i] == ParentFlock)
+                //        continue;
+
+                //    float dist;
+                //    Vector2.Distance(ref manager[i].Location, ref this.Location, out dist);
+                //    if (dist < 40.0f)
+                //    {
+                //        Vector2 force = (this.Location - manager[i].Location);
+                //        externalAvoidanceForce += (force * .5f);
+                //    }
+                //}
+
                 _Forces[2] = avoidanceForce;
+                // _Forces[3] = externalAvoidanceForce;
 
                 for (int i = 0; i < 5; ++i)
                     forces += _Forces[i];
@@ -522,6 +567,21 @@ namespace Connecting
             {
                 mood_texture = s_MoodTextures[(int)MyHoverMood];
             }
+            else if (MyMood == Mood.Eating)
+            {
+                if (_iNextEat <= 0)
+                {
+                    _iNextEat = c_iAnimTime + RandomInstance.Instance.Next(-c_iAnimDelay, c_iAnimDelay);
+                    _iEatingFrame++;
+
+                    if (_iEatingFrame == s_EatingFrames.Length)
+                        _iEatingFrame = 0;
+                }
+                else
+                    _iNextEat -= aTime.ElapsedGameTime.Milliseconds;
+                
+                mood_texture = s_EatingFrames[_iEatingFrame];
+            }
             else
             {
                 mood_texture = s_MoodTextures[(int)MyMood];
@@ -545,6 +605,10 @@ namespace Connecting
             for (int i = 0; i < (int)Mood.Count; ++i)
                 s_MoodTextures[i] = aManager.Load<Texture2D>("people_" + ((Mood)i).ToString() + "_1");
 
+            s_EatingFrames = new Texture2D[] {
+                aManager.Load<Texture2D>("people_eating_1"),
+                aManager.Load<Texture2D>("people_eating_2")
+            };
             s_HeldTexture = aManager.Load<Texture2D>("selection_halo_1");
         }
     }
