@@ -233,6 +233,7 @@ namespace Connecting
             else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
             {
                 // Game Over
+                MusicState.Instance.Stop();
                 CurrentGameState = GameState.GameOver;
             }
 

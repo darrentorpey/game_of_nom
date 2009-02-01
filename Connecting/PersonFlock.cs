@@ -103,6 +103,17 @@ namespace Connecting
         public override void Drop()
         {
             _eMyState = State.Normal;
+            if (_CollidingObject is PersonFlock)
+            {
+                // Add all of us into them.
+                PersonFlock theFlock = ((PersonFlock)_CollidingObject);
+                for (int i = 0; i < _People.Count; ++i)
+                {
+                    RemovePerson(_People[i]);
+                    theFlock.AddPerson(_People[i]);
+                }
+            }
+
             startEatingIfPossible();
         }
 
@@ -162,16 +173,7 @@ namespace Connecting
                     }
                     break;
                 case State.Normal:
-                    if (_CollidingObject is PersonFlock)
-                    {
-                        // Add all of us into them.
-                        PersonFlock theFlock = ((PersonFlock)_CollidingObject);
-                        for (int i = 0; i < _People.Count; ++i)
-                        {
-                            RemovePerson(_People[i]);
-                            theFlock.AddPerson(_People[i]);
-                        }
-                    }
+                    
                     _CollidingObject = null;
                     startEatingIfPossible();
                     break;

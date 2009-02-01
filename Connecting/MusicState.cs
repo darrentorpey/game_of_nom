@@ -59,6 +59,25 @@ namespace Connecting
             _PlayingSongs[1].Pause();
         }
 
+        public void Stop()
+        {
+            if (_PlayingSongs == null)
+                return; // How did that happen!?
+
+            _PlayingSongs[0].Stop();
+            _PlayingSongs[1].Stop();
+
+        }
+
+        public void Restart()
+        {
+            if (_PlayingSongs == null)
+                return; // How did that happen!?
+            
+            _PlayingSongs[0].Play();
+            _PlayingSongs[1].Play();
+        }
+
         public void Update(GameTime aTime)
         {
             float fFrameFade = c_fCrossFadeRate * (float)aTime.ElapsedGameTime.TotalSeconds;
