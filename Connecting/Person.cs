@@ -62,6 +62,8 @@ namespace Connecting
             Right
         }
 
+        public bool Dead { get { return _eMyState == State.Dead; } }
+
         private static Texture2D[] s_MoodTextures;
         private static Texture2D s_HeldTexture;
         private static Color[] _ForceColors = new Color[] {
@@ -337,6 +339,8 @@ namespace Connecting
                 (_eMyState == State.Flocking && ParentFlock.FlockState == PersonFlock.State.Eating))
             {
                 _Hunger -= 2;
+                if (_Hunger < 0)
+                    _Hunger = 0;
             }
 
             if (_Hunger > (int)HungerLevel.Dead)

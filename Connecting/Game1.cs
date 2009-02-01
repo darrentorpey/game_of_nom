@@ -18,6 +18,12 @@ namespace Connecting
     /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
+        public static int GAME_HEIGHT = 600;
+        public static int GAME_WIDTH = 900;
+        Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        Texture2D menuBarTexture;
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         GameObject inTransitByUser;
@@ -35,6 +41,8 @@ namespace Connecting
             this.IsMouseVisible = true;
 
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = GameBoundaries.Width;
+            graphics.PreferredBackBufferHeight = GameBoundaries.Height + 100;
             Content.RootDirectory = "Content";
         }
 
@@ -62,7 +70,10 @@ namespace Connecting
             FoodSource.LoadContent(Content);
             DrawUtils.LoadContent(Content);
             SoundState.LoadContent(Content);
+            SoundState.Instance.ToggleSound();
             font = Content.Load<SpriteFont>("Helvetica");
+
+            menuBarTexture = Content.Load<Texture2D>("menu_bar");
 
             spawnStartingObjects();
         }
@@ -71,9 +82,9 @@ namespace Connecting
         {
             // Add lots of people around randomly
             _Flock = new PersonFlock();
-            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, Window.ClientBounds.Width),
-                RandomInstance.Instance.Next(0, Window.ClientBounds.Height));
-            Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+            _Flock.Location = new Vector2(RandomInstance.Instance.Next(0, GameBoundaries.Width),
+                RandomInstance.Instance.Next(0, GameBoundaries.Height));
+            Rectangle bounds = new Rectangle(13, 13, GameBoundaries.Width, GameBoundaries.Height - 26);
             for (int i = 0; i < 10; ++i)
             {
                 Person newPerson = new Person(_Flock.Location, bounds);
@@ -89,20 +100,20 @@ namespace Connecting
 
             for (int i = 0; i < 5; ++i)
             {
-                spawnFruit(FoodSource.Fruit.Grapes);
+                spawnFruit(FoodSource.Fruit.Grapes, true);
             }
 
             for (int i = 0; i < 5; ++i)
             {
-                spawnFruit(FoodSource.Fruit.Orange);
+                spawnFruit(FoodSource.Fruit.Orange, true);
             }
         }
 
         private Vector2 getRandomLocation(int borderPadding)
         {
             return new Vector2(
-                RandomInstance.Instance.Next(borderPadding, Window.ClientBounds.Width - borderPadding),
-                RandomInstance.Instance.Next(borderPadding, Window.ClientBounds.Height - borderPadding));
+                RandomInstance.Instance.Next(borderPadding, GameBoundaries.Width - borderPadding),
+                RandomInstance.Instance.Next(borderPadding, GameBoundaries.Height - borderPadding));
         }
 
         /// <summary>
@@ -158,13 +169,19 @@ namespace Connecting
 
         private void spawnFruit(FoodSource.Fruit fruitType)
         {
-
             GameObjectManager.Instance.AddObject(new FoodSource(getRandomLocation(50), fruitType));
+        }
+
+        private void spawnFruit(FoodSource.Fruit fruitType, bool skipStartAnimation)
+        {
+            FoodSource foodSource = new FoodSource(getRandomLocation(50), fruitType);
+            foodSource.NoStartAnimation = skipStartAnimation;
+            GameObjectManager.Instance.AddObject(foodSource);
         }
 
         private void spawnPerson()
         {
-            Rectangle bounds = new Rectangle(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+            Rectangle bounds = new Rectangle(0, 0, GameBoundaries.Width, GameBoundaries.Height);
             GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50), bounds));
         }
 
@@ -226,9 +243,11 @@ namespace Connecting
                     {
                         if(manager[i].RadiusCheck(ref mouseLoc, 0.0f))
                         {
-                           this.inTransitByUser = manager[i];
-                           manager[i].Hold();
-                           SoundState.Instance.PlayPickupSound(aTime);
+                            if (!(manager[i] is FoodSource || (manager[i] is Person && ((Person)manager[i]).Dead))) {
+                                this.inTransitByUser = manager[i];
+                                manager[i].Hold();
+                                SoundState.Instance.PlayPickupSound(aTime);
+                            }
                         }
                     }
                 }
@@ -242,7 +261,9 @@ namespace Connecting
 
             if (this.inTransitByUser != null)
             {
-                this.inTransitByUser.Location = mouseLoc;
+                int x = (int)Math.Max(this.inTransitByUser.Radius, Math.Min(mouseLoc.X, GameBoundaries.Width - this.inTransitByUser.Radius));
+                int y = (int)Math.Max(this.inTransitByUser.Radius, Math.Min(mouseLoc.Y, GameBoundaries.Height - this.inTransitByUser.Radius));
+                this.inTransitByUser.Location = new Vector2(x, y);
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Released)
@@ -263,9 +284,11 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.White);
+            GraphicsDevice.Clear(Color.LightCyan);
 
             spriteBatch.Begin();
+
+            spriteBatch.Draw(menuBarTexture, new Rectangle(0, GameBoundaries.Height, GameBoundaries.Width, 100), Color.White);
             
             GameObjectManager.Instance.Draw(spriteBatch, gameTime);
             
