@@ -247,12 +247,6 @@ namespace Connecting
                     {
                         _iNextThink = c_iThinkTime + RandomInstance.Instance.Next(-c_iRandDelay, c_iRandDelay);
                         _eMyAloneState = (AloneState)RandomInstance.Instance.Next(0, 3);
-
-                        switch (RandomInstance.Instance.Next(0, 2))
-                        {
-                            case 0: MyMood = Mood.Sad; break;
-                            case 1: MyMood = Mood.Confused; break;
-                        }
                     }
                     else
                         _iNextThink -= aTime.ElapsedGameTime.Milliseconds;
@@ -389,6 +383,13 @@ namespace Connecting
                 }
                 else
                 {
+                    // If we're alone and wandering or looking around
+                    if(_eMyState == State.Alone && 
+                        (_eMyAloneState == AloneState.Looking || _eMyAloneState == AloneState.Wandering))
+                    {
+                        return Mood.Confused;
+                    }
+                        
                     // Otherwise, that makes us a SAD PANDA
                     return Mood.Sad;
                 }

@@ -28,6 +28,7 @@ namespace Connecting
         private Dictionary<FoodSource, SoundInfo> _NomSoundMap = new Dictionary<FoodSource, SoundInfo>();
         private SoundInfo[] _ExplodeSounds = new SoundInfo[3];
         private SoundInfo _PickupSound;
+        private bool _bSoundOn = true;
 
         public static SoundState Instance
         {
@@ -39,8 +40,16 @@ namespace Connecting
 
         }
 
+        public void ToggleSound()
+        {
+            _bSoundOn = !_bSoundOn;
+        }
+
         public void PlayAngrySound(Person aPerson, GameTime aTime)
         {
+            if (!_bSoundOn)
+                return;
+
             // Each person goes into the map so we don't actually attempt
             // to play more than one sound of each person.
             if (!_AngrySoundMap.ContainsKey(aPerson))
@@ -61,6 +70,9 @@ namespace Connecting
 
         public void PlayExplosionSound(GameTime aTime)
         {
+            if (!_bSoundOn)
+                return;
+
             // Limit the number of explosions
             for (int i = 0; i < _ExplodeSounds.Length; ++i)
             {
@@ -76,6 +88,9 @@ namespace Connecting
 
         public void PlayNomSound(FoodSource aFood, GameTime aTime)
         {
+            if (!_bSoundOn)
+                return;
+
             // Each person goes into the map so we don't actually attempt
             // to play more than one sound of each person.
             if (!_NomSoundMap.ContainsKey(aFood))
@@ -96,6 +111,9 @@ namespace Connecting
 
         public void PlayPickupSound(GameTime aTime)
         {
+            if (!_bSoundOn)
+                return;
+
             if (IsSoundFinished(ref _PickupSound, s_PickUpSound, aTime))
             {
                 _PickupSound._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds; ;

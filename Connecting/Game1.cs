@@ -193,6 +193,8 @@ namespace Connecting
                     spawnRandomFruit();
                 }
             }
+            if (keyState.IsKeyDown(Keys.Back) && !lastKeyState.IsKeyDown(Keys.Back))
+                SoundState.Instance.ToggleSound();
 
             if (_bSingleStep)
             {
