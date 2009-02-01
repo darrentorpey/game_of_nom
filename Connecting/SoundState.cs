@@ -50,21 +50,24 @@ namespace Connecting
             if (!_bSoundOn)
                 return;
 
-            // Each person goes into the map so we don't actually attempt
-            // to play more than one sound of each person.
-            if (!_AngrySoundMap.ContainsKey(aPerson))
+            if (_AngrySoundMap.Count < 5)
             {
-                _AngrySoundMap.Add(aPerson, new SoundInfo());
-            }
+                // Each person goes into the map so we don't actually attempt
+                // to play more than one sound of each person.
+                if (!_AngrySoundMap.ContainsKey(aPerson))
+                {
+                    _AngrySoundMap.Add(aPerson, new SoundInfo());
+                }
 
-            SoundInfo info = _AngrySoundMap[aPerson];
-            if (IsSoundFinished(ref info, s_AngrySounds[info._iSoundIndex], aTime))
-            {
-                info._iSoundIndex = RandomInstance.Instance.Next(0, s_AngrySounds.Length);
-                info._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds;
-                _AngrySoundMap[aPerson] = info;
+                SoundInfo info = _AngrySoundMap[aPerson];
+                if (IsSoundFinished(ref info, s_AngrySounds[info._iSoundIndex], aTime))
+                {
+                    info._iSoundIndex = RandomInstance.Instance.Next(0, s_AngrySounds.Length);
+                    info._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds;
+                    _AngrySoundMap[aPerson] = info;
 
-                s_AngrySounds[info._iSoundIndex].Play();
+                    s_AngrySounds[info._iSoundIndex].Play();
+                }
             }
         }
 
@@ -91,21 +94,24 @@ namespace Connecting
             if (!_bSoundOn)
                 return;
 
-            // Each person goes into the map so we don't actually attempt
-            // to play more than one sound of each person.
-            if (!_NomSoundMap.ContainsKey(aFood))
+            if (_NomSoundMap.Count < 5)
             {
-                _NomSoundMap.Add(aFood, new SoundInfo());
-            }
+                // Each person goes into the map so we don't actually attempt
+                // to play more than one sound of each person.
+                if (!_NomSoundMap.ContainsKey(aFood))
+                {
+                    _NomSoundMap.Add(aFood, new SoundInfo());
+                }
 
-            SoundInfo info = _NomSoundMap[aFood];
-            if (IsSoundFinished(ref info, s_NomSounds[info._iSoundIndex], aTime))
-            {
-                info._iSoundIndex = RandomInstance.Instance.Next(0, s_NomSounds.Length);
-                info._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds;
-                _NomSoundMap[aFood] = info;
+                SoundInfo info = _NomSoundMap[aFood];
+                if (IsSoundFinished(ref info, s_NomSounds[info._iSoundIndex], aTime))
+                {
+                    info._iSoundIndex = RandomInstance.Instance.Next(0, s_NomSounds.Length);
+                    info._iLastPlayTime = (int)aTime.TotalGameTime.TotalMilliseconds;
+                    _NomSoundMap[aFood] = info;
 
-                s_NomSounds[info._iSoundIndex].Play();
+                    s_NomSounds[info._iSoundIndex].Play();
+                }
             }
         }
 
@@ -120,6 +126,29 @@ namespace Connecting
                 _PickupSound._iDelay = 200;
                 s_PickUpSound.Play();
             }                
+        }
+
+        public void ClearFinishedSounds(GameTime aTime)
+        {
+            List<Person> angryRemove = new List<Person>();
+            foreach (KeyValuePair<Person, SoundInfo> key in _AngrySoundMap)
+            {
+                SoundInfo info = key.Value;
+                if (IsSoundFinished(ref info, s_AngrySounds[key.Value._iSoundIndex], aTime))
+                    angryRemove.Add(key.Key);
+            }
+            foreach (Person peep in angryRemove)
+                _AngrySoundMap.Remove(peep);
+
+            List<FoodSource> nomRemove = new List<FoodSource>();
+            foreach (KeyValuePair<FoodSource, SoundInfo> key in _NomSoundMap)
+            {
+                SoundInfo info = key.Value;
+                if (IsSoundFinished(ref info, s_NomSounds[key.Value._iSoundIndex], aTime))
+                    nomRemove.Add(key.Key);
+            }
+            foreach (FoodSource food in nomRemove)
+                _NomSoundMap.Remove(food);
         }
 
         private static bool IsSoundFinished(ref SoundInfo aInfo, SoundEffect aEffect, GameTime aTime)

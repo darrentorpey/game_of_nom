@@ -109,21 +109,21 @@ namespace Connecting
             //// Init people here so that we know the content (textures, etc.) are loaded
             //GameObjectManager.Instance.AddObject(_Flock);
 
-            for (int i = 0; i < 10; ++i) {
+            for (int i = 0; i < 20; ++i) {
                 GameObjectManager.Instance.AddObject(new Person(getRandomLocation(50, bounds), bounds));
             }
 
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 spawnFruit(FoodSource.Fruit.Grapes, true);
             }
 
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 spawnFruit(FoodSource.Fruit.Orange, true);
             }
 
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 spawnFruit(FoodSource.Fruit.Banana, true);
             }
@@ -166,6 +166,8 @@ namespace Connecting
 
             spawnMoreFood(gameTime);
             //spawnMorePeople(gameTime);
+
+            SoundState.Instance.ClearFinishedSounds(gameTime);
 
             // TODO: Add your update logic here
             base.Update(gameTime);
