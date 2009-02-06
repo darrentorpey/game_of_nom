@@ -10,6 +10,9 @@ namespace Connecting
     {
         private static GameObjectManager s_Instance = new GameObjectManager();
 
+        // For metrics
+        public int NumGroupsFormed { get; set; }
+
         private List<GameObject> _Objects = new List<GameObject>();
         private List<GameObject> _AddObject = new List<GameObject>();
         private List<GameObject> _RemoveObject = new List<GameObject>();

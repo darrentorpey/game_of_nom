@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+using Connecting.Metrics;
 
 namespace Connecting
 {
@@ -27,6 +28,10 @@ namespace Connecting
         Rectangle GameBoundaries = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
         private static int MAX_NOMS_DEAD = 10;
+
+        private bool RECORD_METRICS_BY_DEFAULT = false;
+
+        private static float TIME_MEANING_YOU_WON = 1000.0f;
 
         private static GameObjectManager s_GameManPause = new GameObjectManager();
         private static GameObjectManager s_GameManStart = new GameObjectManager();
@@ -76,6 +81,11 @@ namespace Connecting
         public GameOfNom()
         {
             this.IsMouseVisible = true;
+
+            if (!RECORD_METRICS_BY_DEFAULT)
+            {
+                EventRecorder.Instance.DisableRecording();
+            }
 
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = GameBoundaries.Width;
@@ -229,23 +239,25 @@ namespace Connecting
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (_fGameMinutesElapsed >= 3.0f)
-            //if (_fGameMinutesElapsed >= 0.03f)
-            {
-                // A winner is you!
-                CurrentGameState = GameState.Victory;
-                _fTimeLastedLastTime = 1000.0f;
-            }
-            else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
-            {
-                // Game Over
-                MusicState.Instance.Stop();
-                CurrentGameState = GameState.GameOver;
-                _fTimeLastedLastTime = _fGameMinutesElapsed;
-            }
 
             if (CurrentGameState == GameState.Running)
             {
+                if (_fGameMinutesElapsed >= 3.0f)
+                {
+                    // A winner is you!
+                    CurrentGameState = GameState.Victory;
+                    _fTimeLastedLastTime = TIME_MEANING_YOU_WON;
+                    EventRecorder.Instance.recordVictory(GameObjectManager.Instance.CountDead);
+                }
+                else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
+                {
+                    // Game Over
+                    EventRecorder.Instance.recordGameOver((int)gameTime.TotalGameTime.TotalSeconds, GameObjectManager.Instance.NumGroupsFormed);
+                    MusicState.Instance.Stop();
+                    CurrentGameState = GameState.GameOver;
+                    _fTimeLastedLastTime = _fGameMinutesElapsed;
+                }
+
                 _fGameMinutesElapsed += (float)gameTime.ElapsedGameTime.TotalMinutes;
 
                 // Allows the game to exit
@@ -279,6 +291,17 @@ namespace Connecting
             }
             else
             {
+                if (CurrentGameState == GameState.Start)
+                {
+                    //string requestBody = "<?xml version =\"1.0\" encoding=\"UTF-8\"?><event><event_type_id>1</event_type_id><difficulty_mode>Easy</difficulty_mode><timestamp>Tue Jan 20 15:59:05 -0500 2009</timestamp></event>";
+                    //RESTMessageSender restMessage = new RESTMessageSender("POST", "http://localhost:3000/events.xml");
+                    //Console.WriteLine("POSTing event to IndieMetrics...");
+                    //if (gameTime.TotalGameTime.Seconds % 10 == 0)
+                    //{
+                    //    restMessage.MakeRequest(requestBody);
+                    //}
+                }
+
                 KeyboardState keyState = Keyboard.GetState(PlayerIndex.One);
                 if (lastKeyState == null)
                     lastKeyState = keyState;
@@ -310,17 +333,15 @@ namespace Connecting
                         //{
                         //    CurrentGameState = GameState.Running;
                         //}
-                        if (keysPressed.Length > 0)
+                        if (keysPressed.Length > 0 && !lastKeyState.IsKeyDown(Keys.R))
                         {
-                            CurrentGameState = GameState.Running;
-                            MusicState.Instance.Play();
+                            startGame();
                         }
 
                         // Mouse 
                         if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
                         {
-                            CurrentGameState = GameState.Running;
-                            MusicState.Instance.Play();
+                            startGame();
                         }
 
                         s_GameManStart.Update(gameTime);
@@ -378,6 +399,20 @@ namespace Connecting
                 lastKeyState = keyState;
                 lastMouseState = mouseState;
             }
+        }
+
+        private void startGame()
+        {
+            try
+            {
+                EventRecorder.Instance.recordGameStart();
+            }
+            catch (System.Net.WebException e)
+            {
+                Console.WriteLine("Event record fail: " + e.Message);
+            }
+            CurrentGameState = GameState.Running;
+            MusicState.Instance.Play();
         }
 
         private void spawnMorePeople(GameTime aTime)
@@ -616,12 +651,10 @@ namespace Connecting
                 string timeElapsed = String.Format("Time Elapsed {0}:{1:00}", totalMinutesPlayed, totalSecondsPlayed);
                 drawString(spriteBatch, helveticaTiny, timeElapsed, new Vector2(180.0f, 635.0f));
 
-
-
                 GameObjectManager.Instance.Draw(spriteBatch, gameTime);
 
                 string timePart;
-                if (_fTimeLastedLastTime == 1000.0f)
+                if (_fTimeLastedLastTime == TIME_MEANING_YOU_WON)
                 {
                     timePart = "You won";
                 }
@@ -684,6 +717,9 @@ namespace Connecting
         private void drawStartScreen(SpriteBatch spriteBatch)
         {
             drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "left-click or press any key to start", new Vector2(0.0f, 570.0f));
+
+            string metricsStatus = EventRecorder.Instance.Recording ? "On" : "Off";
+            drawString(spriteBatch, helveticaTiny, "Metrics Recording: " + metricsStatus, new Vector2(5, GameBoundaries.Height + 75));
 
             float buttonLegendStartY = 620.0f;
             float buttonLegendStartX = 735.0f;

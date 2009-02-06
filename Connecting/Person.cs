@@ -150,6 +150,8 @@ namespace Connecting
                 }
                 else if (_CollidingObject is Person)
                 {
+                    // Create a flock from the two people who just collided
+
                     manager.RemoveObject(this);
                     manager.RemoveObject(_CollidingObject);
 
@@ -161,6 +163,7 @@ namespace Connecting
                     flock.AddPerson((Person)_CollidingObject);
                     flock.Location = this.Location;
                     manager.AddObject(flock);
+                    GameObjectManager.Instance.NumGroupsFormed++;
 
                     if (_CollidingObject.EatingObject != null)
                     {
@@ -379,7 +382,7 @@ namespace Connecting
             }
             else if (_eMyState == State.Flocking && ParentFlock.FlockState == PersonFlock.State.Eating)
             {
-                _Hunger -= 1.7f;
+                _Hunger -=  1.7f;
             }
             
             if (_Hunger < 0)
