@@ -83,9 +83,9 @@
     <Compile Include="Angel.cs" />
     <Compile Include="GameOfNom.cs" />
     <Compile Include="Metrics\EventRecorder.cs" />
+    <Compile Include="Metrics\MetricsWrapper.cs" />
     <Compile Include="Metrics\RESTMessageSender.cs" />
     <Compile Include="Instruction.cs" />
-    <Compile Include="Metrics\IndieMetricsWrapper.cs" />
     <Compile Include="MusicState.cs" />
     <Compile Include="GameLogo.cs" />
     <Compile Include="GameLogoFull.cs" />

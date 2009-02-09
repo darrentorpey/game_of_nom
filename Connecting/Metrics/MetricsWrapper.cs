@@ -12,7 +12,7 @@ namespace Connecting.Metrics
     //  <timestamp>Tue Jan 20 15:59:05 -0500 2009</timestamp>
     //</event>
 
-    class IndieMetricsWrapper
+    class MetricsWrapper
     {
         string _GameKey; // The unique, secret key for this game
         string _GameShortname; // The 'shortname' of the game in our system
@@ -21,7 +21,7 @@ namespace Connecting.Metrics
 
         RESTMessageSender _EventPostSender = new RESTMessageSender("POST", "http://localhost:3000/events.xml");
 
-        public IndieMetricsWrapper(string gameShortname, string gameKey)
+        public MetricsWrapper(string gameShortname, string gameKey)
         {
             _GameKey = gameKey;
             _GameShortname = gameShortname;

@@ -15,7 +15,7 @@ namespace Connecting.Metrics
         private bool _bAllowRecording = true;
         public bool Recording { get { return _bAllowRecording; } }
 
-        IndieMetricsWrapper wrapper;
+        MetricsWrapper wrapper;
 
         // Fill these in with the IDs of the GameEvents you've created on IndieMetrics.com
         private enum Event
@@ -49,7 +49,7 @@ namespace Connecting.Metrics
 
         public EventRecorder(string gameShortname, string gameKey)
         {
-            wrapper = new IndieMetricsWrapper(gameShortname, gameKey);
+            wrapper = new MetricsWrapper(gameShortname, gameKey);
         }
 
         // Define helper methods to send event POST messages
