@@ -50,8 +50,8 @@ namespace Connecting
         public enum HungerLevel
         {
             Hungry = 600,
-            Starving = 1000,
-            Dead = 1400
+            Starving = 1200,
+            Dead = 1800
         }
 
         public enum AloneState
@@ -218,9 +218,9 @@ namespace Connecting
                     MyMood = getMood();
                     break;
                 case State.Flocking:
-                    const float c_fForceSensitivity = .8f;
+                    const float c_fForceSensitivity = .4f;
                     const float c_fCalmingForce = 100.0f;
-                    const float c_fHungerFactor = 80.0f;
+                    const float c_fHungerFactor = 100.0f;
                     const float c_fExplosionTollerange = 250.0f;
                     const float c_fExplositionForceMul = 100.0f;
 
@@ -531,7 +531,7 @@ namespace Connecting
                 // This force becomes smaller as the group becomes larger.
                 float fflockFactor = ParentFlock.Count * .15f;
                 _Forces[1] = GetForceToward(ParentFlock.TargetLocation, .3f, 2.5f);
-                _Forces[1] /= ParentFlock.Count;
+                //_Forces[1] /= ParentFlock.Count; // This is what made them slow down in larger groups
 
                 // Move away from all other boids
                 Vector2 avoidanceForce = Vector2.Zero;

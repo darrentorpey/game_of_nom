@@ -20,7 +20,7 @@ namespace Connecting
     {
         public static int c_iStartFruitSpawnRate = 4000;
         public static int c_iFruitSpawnRateIncrease = 750;
-        public static int c_iFruitSpawnIncreaseEvery = 5;
+        public static int c_iFruitSpawnIncreaseEvery = 7;
         public static int c_iSwitchSongOnXObjects = 8;
 
         public static int GAME_HEIGHT = 600;
