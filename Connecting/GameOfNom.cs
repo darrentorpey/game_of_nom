@@ -148,6 +148,9 @@ namespace Connecting
             loadStartScreen();
             loadGameOverScreen();
             loadVictoryScreen();
+
+            // Start with sound off
+            SoundState.Instance.SoundOff(true);
         }
 
         private void loadPauseScreen()
@@ -242,17 +245,21 @@ namespace Connecting
 
             if (CurrentGameState == GameState.Running)
             {
+                if (_fGameMinutesElapsed > 0.01) {
+                    SoundState.Instance.SoundResume();
+                }
+
                 if (_fGameMinutesElapsed >= 3.0f)
                 {
                     // A winner is you!
                     CurrentGameState = GameState.Victory;
                     _fTimeLastedLastTime = TIME_MEANING_YOU_WON;
-                    EventRecorder.Instance.recordVictory(GameObjectManager.Instance.CountDead);
+                    EventRecorder.Instance.RecordVictory(GameObjectManager.Instance.CountDead);
                 }
                 else if (GameObjectManager.Instance.CountDead >= MAX_NOMS_DEAD)
                 {
                     // Game Over
-                    EventRecorder.Instance.recordGameOver((int)gameTime.TotalGameTime.TotalSeconds, GameObjectManager.Instance.NumGroupsFormed);
+                    EventRecorder.Instance.RecordGameOver((int)gameTime.TotalGameTime.TotalSeconds, GameObjectManager.Instance.NumGroupsFormed);
                     MusicState.Instance.Stop();
                     CurrentGameState = GameState.GameOver;
                     _fTimeLastedLastTime = _fGameMinutesElapsed;
@@ -329,14 +336,22 @@ namespace Connecting
                     case GameState.Start:
 
                         // Keyboard
-                        //if ((keyState.IsKeyDown(Keys.Space) && !lastKeyState.IsKeyDown(Keys.Space)) || (keyState.IsKeyDown(Keys.Enter) && !lastKeyState.IsKeyDown(Keys.Enter)))
-                        //{
-                        //    CurrentGameState = GameState.Running;
-                        //}
-                        if (keysPressed.Length > 0 && !lastKeyState.IsKeyDown(Keys.R))
+                        if (keyState.IsKeyDown(Keys.D1))
                         {
-                            startGame();
+                            PlayerManager.Instance.LoadPlayer("Darren");
                         }
+                        else if (keyState.IsKeyDown(Keys.D2))
+                        {
+                            PlayerManager.Instance.LoadPlayer("Jeff");
+                        }
+                        else if (keyState.IsKeyDown(Keys.D3))
+                        {
+                            PlayerManager.Instance.LoadPlayer("Amanda");
+                        }
+                        //else if (keysPressed.Length > 0 && !lastKeyState.IsKeyDown(Keys.R))
+                        //{
+                        //    startGame();
+                        //}
 
                         // Mouse 
                         if (mouseState.LeftButton == ButtonState.Pressed && (lastMouseState.LeftButton != ButtonState.Pressed))
@@ -405,7 +420,7 @@ namespace Connecting
         {
             try
             {
-                EventRecorder.Instance.recordGameStart();
+                EventRecorder.Instance.RecordGameStart();
             }
             catch (System.Net.WebException e)
             {
@@ -602,7 +617,7 @@ namespace Connecting
                         {
                             if (manager[i] is Person)
                             {
-                                manager[i]._Hunger += 100;
+                                manager[i]._Hunger += 200;
                             }
                         }
                     }
@@ -716,10 +731,14 @@ namespace Connecting
 
         private void drawStartScreen(SpriteBatch spriteBatch)
         {
-            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "left-click or press any key to start", new Vector2(0.0f, 570.0f));
+            drawStringHorizontallyCentered(spriteBatch, helveticaHuge, "left-click to start", new Vector2(0.0f, 570.0f));
 
             string metricsStatus = EventRecorder.Instance.Recording ? "On" : "Off";
-            drawString(spriteBatch, helveticaTiny, "Metrics Recording: " + metricsStatus, new Vector2(5, GameBoundaries.Height + 75));
+            //drawString(spriteBatch, helveticaTiny, "Metrics Recording: " + metricsStatus, new Vector2(5, GameBoundaries.Height + 75));
+
+            string playerUUID = PlayerManager.Instance.CurrentPlayer.UUID;
+            string playerName = PlayerManager.Instance.CurrentPlayer.Name;
+            //drawString(spriteBatch, helveticaTiny, "Current Player: " + playerName, new Vector2(5, GameBoundaries.Height + 50));
 
             float buttonLegendStartY = 620.0f;
             float buttonLegendStartX = 735.0f;

@@ -61,6 +61,11 @@ namespace Connecting
             _bSoundOn = false;
         }
 
+        public void SoundOff()
+        {
+            SoundOff(false);
+        }
+
         public void SoundResume()
         {
             if (_bOldSoundState != null)

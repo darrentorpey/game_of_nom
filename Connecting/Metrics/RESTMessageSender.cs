@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Connecting
 {
-    public class RESTMessageSender
+    public class SimpleRESTClient
     {
         string _responseText;
 
@@ -14,7 +14,7 @@ namespace Connecting
         string _requestURL;
         private static string s_ContentType = "application/xml";
 
-        public RESTMessageSender(string httpMethod, string requestURL)
+        public SimpleRESTClient(string httpMethod, string requestURL)
         {
             _requestMethod = httpMethod;
             _requestURL = requestURL;
@@ -28,6 +28,7 @@ namespace Connecting
 				request.Method = _requestMethod;
                 request.ContentType = s_ContentType;
                 setBody(request, messageBody);
+                Console.WriteLine("MEssage: " + messageBody);
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 
@@ -47,6 +48,15 @@ namespace Connecting
             return _responseText;
         }
 
+        // Gets a single string from a simple GET request
+        public string GetSimpleString()
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_requestURL);
+            request.Method = _requestMethod;
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            return getResponseBody(response);
+        }
+
         private
 	        void setBody(HttpWebRequest request, string requestBody)
 	        {
@@ -60,10 +70,15 @@ namespace Connecting
 		        }
 	        }
 
+	        string getResponseBody(HttpWebResponse response)
+	        {
+                string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+		        return body;
+	        }
+
 	        string convertResponseToString(HttpWebResponse response)
 	        {
 		        string result = "Status code: " + (int)response.StatusCode + " " + response.StatusCode + "\r\n";
-
 		        foreach (string key in response.Headers.Keys)
 		        {
 			        result += string.Format("{0}: {1} \r\n", key, response.Headers[key]);
