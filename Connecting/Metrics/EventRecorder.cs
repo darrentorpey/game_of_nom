@@ -6,7 +6,7 @@ namespace Connecting.Metrics
 {
     class EventRecorder
     {
-        const string SECRET_GAME_KEY = "851024815";
+        const string SECRET_GAME_KEY = "";
 
         private static EventRecorder s_Instance = new EventRecorder(SECRET_GAME_KEY);
         public static EventRecorder Instance { get { return s_Instance; } }
@@ -22,10 +22,10 @@ namespace Connecting.Metrics
         // Fill these in with the IDs of the GameEvents you've created on IndieMetrics.com
         private enum Event
         {
-            GameStart = 21,
-            GameOver = 22,
-            GameQuit = 23,
-            GameVictory = 24
+            GameStart = 1,
+            GameOver = 2,
+            GameQuit = 3,
+            GameVictory = 4
         }
 
         public void DisableRecording() {
@@ -77,7 +77,14 @@ namespace Connecting.Metrics
 
         public string GetNewPlayerID()
         {
-            return wrapper.GetNewPlayerID();
+            string playerID = wrapper.GetNewPlayerID();
+            if ("0" == playerID)
+            {
+                Console.WriteLine("Fetching a new player ID failed");
+                DisableRecording();
+                return "";
+            }
+            return playerID;
         } 
 
         // If recording is allowed, record an event from the data given

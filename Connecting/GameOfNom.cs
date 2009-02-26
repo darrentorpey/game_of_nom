@@ -91,6 +91,7 @@ namespace Connecting
             graphics.PreferredBackBufferWidth = GameBoundaries.Width;
             graphics.PreferredBackBufferHeight = GameBoundaries.Height + 100;
             Content.RootDirectory = "Content";
+            Window.Title = "Game of Nom";
 
             CurrentGameState = GameState.Start;
 

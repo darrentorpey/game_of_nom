@@ -54,6 +54,10 @@ namespace Connecting
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_requestURL);
             request.Method = _requestMethod;
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return "0";
+            }
             return getResponseBody(response);
         }
 

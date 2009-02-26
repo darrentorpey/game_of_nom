@@ -19,7 +19,7 @@ namespace Connecting.Metrics
 
         string _XMLBegin = "<?xml version =\"1.0\" encoding=\"UTF-8\"?>";
 
-        SimpleRESTClient _EventPostSender = new SimpleRESTClient("POST", "http://localhost:3000/events.xml");
+        SimpleRESTClient _EventPostSender = new SimpleRESTClient("POST", "/events.xml");
 
         public MetricsWrapper(string gameKey)
         {
@@ -36,7 +36,7 @@ namespace Connecting.Metrics
 
         public string GetNewPlayerID()
         {
-            SimpleRESTClient _EventPostSender = new SimpleRESTClient("GET", "http://localhost:3000/players/get_new_id");
+            SimpleRESTClient _EventPostSender = new SimpleRESTClient("GET", "/players/get_new_id");
             string newID = _EventPostSender.GetSimpleString();
             return newID;
         }
