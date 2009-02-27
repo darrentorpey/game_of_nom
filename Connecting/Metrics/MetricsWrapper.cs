@@ -15,11 +15,14 @@ namespace Connecting.Metrics
 
     class MetricsWrapper
     {
+        static string s_URL_BASE = "http://alpha.indiemetrics.com/";
+        //static string s_URL_BASE = "http://localhost:3000/";
+
         string _GameKey; // The unique, secret key for this game
 
         string _XMLBegin = "<?xml version =\"1.0\" encoding=\"UTF-8\"?>";
 
-        SimpleRESTClient _EventPostSender = new SimpleRESTClient("POST", "http://localhost:3000/events.xml");
+        SimpleRESTClient _EventPostSender = new SimpleRESTClient("POST", s_URL_BASE + "events.xml");
 
         public MetricsWrapper(string gameKey)
         {
@@ -36,8 +39,8 @@ namespace Connecting.Metrics
 
         public string GetNewPlayerID()
         {
-            SimpleRESTClient _EventPostSender = new SimpleRESTClient("GET", "http://localhost:3000/players/get_new_id");
-            string newID = _EventPostSender.GetSimpleString();
+            SimpleRESTClient _PlayerIDFetcher = new SimpleRESTClient("GET", s_URL_BASE + "players/get_new_id");
+            string newID = _PlayerIDFetcher.GetSimpleString();
             return newID;
         }
 

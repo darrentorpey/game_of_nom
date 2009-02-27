@@ -11,6 +11,7 @@ namespace Connecting
         string _responseText;
 
         string _requestMethod;
+        string _requestURLBase;
         string _requestURL;
         private static string s_ContentType = "application/xml";
 

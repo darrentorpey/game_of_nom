@@ -29,7 +29,7 @@ namespace Connecting
 
         private static int MAX_NOMS_DEAD = 10;
 
-        private bool RECORD_METRICS_BY_DEFAULT = false;
+        private bool RECORD_METRICS_BY_DEFAULT = true;
 
         private static float TIME_MEANING_YOU_WON = 1000.0f;
 
