@@ -6,7 +6,7 @@ namespace Connecting.Metrics
 {
     class EventRecorder
     {
-        const string SECRET_GAME_KEY = "893c910a-532e-102c-a43c-0030487edd88";
+        const string SECRET_GAME_KEY = "";
 
         private static EventRecorder s_Instance = new EventRecorder(SECRET_GAME_KEY);
         public static EventRecorder Instance { get { return s_Instance; } }
@@ -77,7 +77,14 @@ namespace Connecting.Metrics
 
         public string GetNewPlayerID()
         {
-            return wrapper.GetNewPlayerID();
+            string playerID = wrapper.GetNewPlayerID();
+            if ("0" == playerID)
+            {
+                Console.WriteLine("Fetching a new player ID failed");
+                DisableRecording();
+                return "";
+            }
+            return playerID;
         } 
 
         // If recording is allowed, record an event from the data given
