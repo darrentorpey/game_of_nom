@@ -51,7 +51,7 @@ namespace Connecting.Metrics
 
         public EventRecorder(string gameKey)
         {
-            wrapper = new MetricsWrapper(gameKey);
+            wrapper = new MetricsWrapper("http://alpha.indiemetrics.com/", gameKey);
         }
 
         // Define helper methods to send event POST messages
